@@ -5,6 +5,7 @@ import { PaperProvider, MD3DarkTheme } from 'react-native-paper';
 import AppNavigator from './src/navigation/AppNavigator';
 import { useStore } from './src/store/useStore';
 import { COLORS } from './src/constants/theme';
+import { GradientBackground } from './src/components/glass/GradientBackground';
 
 const paperTheme = {
   ...MD3DarkTheme,
@@ -17,7 +18,7 @@ const paperTheme = {
     surfaceVariant: COLORS.glassLight,
     error: COLORS.error,
     onPrimary: '#fff',
-    outline: COLORS.border,
+    outline: COLORS.glassBorder,
     onSurface: COLORS.textPrimary,
     onSurfaceVariant: COLORS.textSecondary,
   },
@@ -33,10 +34,12 @@ function AppContent() {
 
   if (!isReady) {
     return (
-      <View style={styles.loading}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>加载中...</Text>
-      </View>
+      <GradientBackground>
+        <View style={styles.loading}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={styles.loadingText}>加载中...</Text>
+        </View>
+      </GradientBackground>
     );
   }
   return <AppNavigator />;
@@ -46,8 +49,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <PaperProvider theme={paperTheme}>
-        {/* 深色状态栏，图标白色 */}
-        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+        <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
         <AppContent />
       </PaperProvider>
     </SafeAreaProvider>
@@ -57,7 +59,6 @@ export default function App() {
 const styles = StyleSheet.create({
   loading: {
     flex: 1, justifyContent: 'center', alignItems: 'center',
-    backgroundColor: COLORS.background,
   },
   loadingText: {
     marginTop: 14, color: COLORS.textSecondary, fontSize: 13,

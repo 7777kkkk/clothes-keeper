@@ -12,10 +12,11 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
+import { GradientBackground } from '../components/glass/GradientBackground';
 import { RootStackParamList, Season, LocationType, CustomAttribute } from '../types';
 
 type RouteProps = RouteProp<RootStackParamList, 'ClothingDetail'>;
@@ -223,6 +224,8 @@ const ClothingDetailScreen = () => {
   // ============ 编辑模式 ============
   if (isEditMode) {
     return (
+      <GradientBackground>
+      <SafeAreaView style={{flex:1}}>
       <ScrollView style={[styles.container, { paddingBottom: insets.bottom + 80 }]}>
         <View style={{ height: insets.top > 0 ? 0 : SPACING.md }} />
         {/* 图片选择 */}
@@ -527,12 +530,16 @@ const ClothingDetailScreen = () => {
             </View>
           </View>
         </Modal>
-      </ScrollView>
-    );
+    </ScrollView>
+  </SafeAreaView>
+</GradientBackground>
+);
   }
 
   // ============ 浏览模式 ============
   return (
+    <GradientBackground>
+    <SafeAreaView style={{flex:1}}>
     <ScrollView style={[styles.container, { paddingBottom: insets.bottom + 80 }]}>
       <View style={{ height: insets.top > 0 ? 0 : SPACING.md }} />
       {/* 图片轮播 */}
@@ -639,13 +646,15 @@ const ClothingDetailScreen = () => {
         </TouchableOpacity>
       </View>
     </ScrollView>
-  );
+  </SafeAreaView>
+</GradientBackground>
+);
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.card,
   },
   notFound: {
     flex: 1,
@@ -663,7 +672,7 @@ const styles = StyleSheet.create({
   mainImage: {
     width: 350,
     height: 350,
-    backgroundColor: COLORS.glassLight,
+    backgroundColor: 'rgba(255,255,255,0.65)',
   },
   imageIndicator: {
     position: 'absolute',
@@ -681,7 +690,7 @@ const styles = StyleSheet.create({
   // 基础信息
   section: {
     padding: SPACING.lg,
-    backgroundColor: COLORS.glass,
+    backgroundColor: 'rgba(255,255,255,0.85)',
     marginBottom: SPACING.sm,
   },
   sectionHeader: {
@@ -705,7 +714,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs,
     borderRadius: BORDER_RADIUS.full,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.card,
   },
   tagText: {
     fontSize: FONT_SIZES.sm,
@@ -717,7 +726,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: SPACING.sm,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: 'rgba(0,0,0,0.12)',
   },
   infoLabel: {
     fontSize: FONT_SIZES.md,
@@ -781,7 +790,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: BORDER_RADIUS.sm,
-    backgroundColor: COLORS.glassLight,
+    backgroundColor: 'rgba(255,255,255,0.65)',
   },
   removeImageBtn: {
     position: 'absolute',
@@ -818,7 +827,7 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: BORDER_RADIUS.sm,
     borderWidth: 2,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(0,0,0,0.12)',
     borderStyle: 'dashed',
     justifyContent: 'center',
     alignItems: 'center',
@@ -828,7 +837,7 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
   },
   input: {
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.card,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.md,
     borderRadius: BORDER_RADIUS.sm,
@@ -851,9 +860,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
     borderRadius: BORDER_RADIUS.full,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.card,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(0,0,0,0.12)',
   },
   chipActive: {
     backgroundColor: COLORS.primary,
@@ -876,7 +885,7 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.sm,
     borderRadius: BORDER_RADIUS.sm,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(0,0,0,0.12)',
     alignItems: 'center',
   },
   dateModeBtnActive: {
@@ -894,7 +903,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.card,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.md,
     borderRadius: BORDER_RADIUS.sm,
@@ -914,7 +923,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.card,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
     borderRadius: BORDER_RADIUS.sm,
@@ -970,9 +979,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelBtn: {
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.card,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(0,0,0,0.12)',
   },
   cancelBtnText: {
     color: COLORS.textSecondary,
@@ -996,7 +1005,7 @@ const styles = StyleSheet.create({
   yearPickerModal: {
     width: 280,
     maxHeight: 400,
-    backgroundColor: COLORS.glass,
+    backgroundColor: 'rgba(255,255,255,0.85)',
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.lg,
   },
@@ -1029,7 +1038,7 @@ const styles = StyleSheet.create({
   },
   attrModal: {
     width: 300,
-    backgroundColor: COLORS.glass,
+    backgroundColor: 'rgba(255,255,255,0.85)',
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.lg,
   },
@@ -1041,7 +1050,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
   },
   attrInput: {
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.card,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.md,
     borderRadius: BORDER_RADIUS.sm,
@@ -1059,7 +1068,7 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.md,
     borderRadius: BORDER_RADIUS.sm,
     alignItems: 'center',
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.card,
   },
   modalConfirmBtn: {
     backgroundColor: COLORS.primary,

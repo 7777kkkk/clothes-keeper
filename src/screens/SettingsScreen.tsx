@@ -5,11 +5,12 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
 import { GlassCard, GlassPill, SectionHeader } from '../components/glass/GlassComponents';
+import { GradientBackground } from '../components/glass/GradientBackground';
 import { Season } from '../types';
 
 const SEASONS: Season[] = ['春', '夏', '秋', '冬'];
@@ -46,7 +47,7 @@ const SettingRow = ({
     </View>
     <View style={styles.settingRight}>
       {value && <Text style={styles.settingValue}>{value}</Text>}
-      <Icon name="chevron-right" size={18} color={COLORS.textMuted} />
+      <Icon name="chevron-right" size={18} color={'rgba(0,0,0,0.35)'} />
     </View>
   </TouchableOpacity>
 );
@@ -70,7 +71,8 @@ const SettingsScreen = () => {
   }, [clothingItems]);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <GradientBackground>
+    <SafeAreaView style={[styles.container, { paddingTop: insets.top }]} edges={['top']}>
       <View style={styles.topNav}>
         <Text style={styles.topNavTitle}>我的</Text>
       </View>
@@ -83,8 +85,8 @@ const SettingsScreen = () => {
         {/* 统计 */}
         <SectionHeader title="衣橱统计" />
         <View style={styles.statsGrid}>
-          <StatCard v={clothingItems.length} l="单品" icon="wardrobe" color={COLORS.primary} />
-          <StatCard v={outfits.length} l="搭配" icon="tshirt-crew" color={COLORS.accent} />
+          <StatCard v={clothingItems.length} l="单品" icon="shirt" color={COLORS.primary} />
+          <StatCard v={outfits.length} l="搭配" icon="body" color={COLORS.accent} />
           <StatCard v={categories.length} l="分类" icon="shape-outline" color="#8B5CF6" />
           <StatCard
             v={stats.totalVal > 0 ? `¥${stats.totalVal}` : '—'}
@@ -153,7 +155,8 @@ const SettingsScreen = () => {
           <Text style={styles.footerSub}>Made with ❤️</Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+        </SafeAreaView>
+    </GradientBackground>
   );
 };
 
@@ -161,11 +164,11 @@ const SettingsScreen = () => {
 //  Styles
 // ============================================================
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
+  container: { flex: 1, backgroundColor: COLORS.card },
   topNav: {
     paddingHorizontal: SPACING.xl, paddingVertical: SPACING.sm,
-    backgroundColor: COLORS.glass,
-    borderBottomWidth: 1, borderBottomColor: COLORS.border,
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.12)',
   },
   topNavTitle: {
     fontSize: FONT_SIZES.xxl, fontWeight: '800',
@@ -182,9 +185,9 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: '48%',
-    backgroundColor: COLORS.glass,
+    backgroundColor: 'rgba(255,255,255,0.85)',
     borderRadius: BORDER_RADIUS.xl,
-    borderWidth: 1, borderColor: COLORS.glassBorder,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.5)',
     padding: SPACING.lg, alignItems: 'center',
     ...SHADOWS.glass,
   },
@@ -208,23 +211,23 @@ const styles = StyleSheet.create({
   settingRow: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: SPACING.lg, paddingVertical: SPACING.md,
-    borderBottomWidth: 1, borderBottomColor: COLORS.border,
+    borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.12)',
     gap: SPACING.md,
   },
   settingIconBg: {
     width: 34, height: 34, borderRadius: BORDER_RADIUS.md,
-    backgroundColor: COLORS.primarySoft, justifyContent: 'center', alignItems: 'center',
+    backgroundColor: 'rgba(74,144,217,0.2)', justifyContent: 'center', alignItems: 'center',
   },
   settingText: { flex: 1 },
   settingTitle: { fontSize: FONT_SIZES.md, fontWeight: '600', color: COLORS.textPrimary },
-  settingSub: { fontSize: FONT_SIZES.xs, color: COLORS.textMuted, marginTop: 1 },
+  settingSub: { fontSize: FONT_SIZES.xs, color: 'rgba(0,0,0,0.35)', marginTop: 1 },
   settingRight: { flexDirection: 'row', alignItems: 'center', gap: SPACING.xs },
   settingValue: { fontSize: FONT_SIZES.sm, color: COLORS.textSecondary },
 
   // Footer
   footer: { alignItems: 'center', paddingVertical: SPACING.xl, gap: SPACING.xs },
-  footerText: { fontSize: FONT_SIZES.sm, color: COLORS.textMuted, fontWeight: '600' },
-  footerSub: { fontSize: FONT_SIZES.xs, color: COLORS.textMuted },
+  footerText: { fontSize: FONT_SIZES.sm, color: 'rgba(0,0,0,0.35)', fontWeight: '600' },
+  footerSub: { fontSize: FONT_SIZES.xs, color: 'rgba(0,0,0,0.35)' },
 });
 
 export default SettingsScreen;

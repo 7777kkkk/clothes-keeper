@@ -8,9 +8,10 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
+import { GradientBackground } from '../components/glass/GradientBackground';
 import { Category } from '../types';
 
 const CategoryManageScreen = () => {
@@ -48,55 +49,58 @@ const CategoryManageScreen = () => {
   );
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top > 0 ? 0 : SPACING.md, paddingBottom: insets.bottom + 80 }]}>
-      <View style={{ height: insets.top }} />
-      {/* 添加新品类 */}
-      <View style={styles.addSection}>
-        <TextInput
-          style={styles.input}
-          placeholder="输入新品类名称"
-          value={newName}
-          onChangeText={setNewName}
-          placeholderTextColor={COLORS.textSecondary}
-        />
-        <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
-          <Text style={styles.addButtonText}>添加</Text>
-        </TouchableOpacity>
-      </View>
+    <GradientBackground>
+    <SafeAreaView style={{ flex: 1 }}>
+      <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom + 80 }]}>
+        {/* 添加新品类 */}
+        <View style={styles.addSection}>
+          <TextInput
+            style={styles.input}
+            placeholder="输入新品类名称"
+            value={newName}
+            onChangeText={setNewName}
+            placeholderTextColor="rgba(0,0,0,0.35)"
+          />
+          <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
+            <Text style={styles.addButtonText}>添加</Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* 品类列表 */}
-      <FlatList
-        data={categories}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.list}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>还没有品类</Text>
-        }
-      />
-    </View>
+        {/* 品类列表 */}
+        <FlatList
+          data={categories}
+          renderItem={renderItem}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.list}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>还没有品类</Text>
+          }
+        />
+      </View>
+    </SafeAreaView>
+    </GradientBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   addSection: {
     flexDirection: 'row',
     padding: SPACING.lg,
-    backgroundColor: COLORS.glass,
+    backgroundColor: COLORS.card,
     gap: SPACING.md,
+    ...SHADOWS.card,
   },
   input: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: 'rgba(0,0,0,0.06)',
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
     borderRadius: BORDER_RADIUS.sm,
     fontSize: FONT_SIZES.md,
-    color: COLORS.textPrimary,
+    color: '#333',
   },
   addButton: {
     backgroundColor: COLORS.primary,
@@ -116,15 +120,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: COLORS.glass,
+    backgroundColor: COLORS.card,
     padding: SPACING.lg,
-    borderRadius: BORDER_RADIUS.sm,
+    borderRadius: BORDER_RADIUS.lg,
     marginBottom: SPACING.sm,
     ...SHADOWS.card,
   },
   itemName: {
     fontSize: FONT_SIZES.md,
-    color: COLORS.textPrimary,
+    color: '#333',
     fontWeight: '500',
   },
   deleteBtn: {
@@ -133,7 +137,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     textAlign: 'center',
-    color: COLORS.textSecondary,
+    color: 'rgba(0,0,0,0.35)',
     marginTop: 40,
     fontSize: FONT_SIZES.md,
   },

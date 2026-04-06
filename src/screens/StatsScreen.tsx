@@ -5,10 +5,11 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
 import { GlassCard, GlassPill } from '../components/glass/GlassComponents';
+import { GradientBackground } from '../components/glass/GradientBackground';
 import { Season } from '../types';
 
 const SEASONS: Season[] = ['春', '夏', '秋', '冬'];
@@ -52,7 +53,8 @@ const StatsScreen = () => {
   }, [clothingItems, categories]);
 
   return (
-    <SafeAreaView style={statsStyles.container} edges={['top']}>
+    <GradientBackground>
+    <SafeAreaView style={[statsStyles.container, { paddingTop: insets.top }]} edges={['top']}>
       <View style={statsStyles.topNav}>
         <Text style={statsStyles.topNavTitle}>穿搭统计</Text>
       </View>
@@ -64,8 +66,8 @@ const StatsScreen = () => {
       >
         {/* 统计卡片网格 */}
         <View style={statsStyles.statsGrid}>
-          <StatCard v={clothingItems.length} l="单品" icon="wardrobe" color={COLORS.primary} />
-          <StatCard v={outfits.length} l="搭配" icon="tshirt-crew" color={COLORS.accent} />
+          <StatCard v={clothingItems.length} l="单品" icon="shirt" color={COLORS.primary} />
+          <StatCard v={outfits.length} l="搭配" icon="body" color={COLORS.accent} />
           <StatCard v={calendarRecords.length} l="穿搭记录" icon="calendar-check" color="#8B5CF6" />
           <StatCard
             v={stats.totalVal > 0 ? `¥${stats.totalVal}` : '—'}
@@ -128,22 +130,23 @@ const StatsScreen = () => {
         {/* 空状态 */}
         {clothingItems.length === 0 && (
           <GlassCard style={statsStyles.emptyCard}>
-            <Icon name="chart-bar" size={48} color={COLORS.textMuted} />
+            <Icon name="stats-chart-outline" size={48} color={'rgba(0,0,0,0.35)'} />
             <Text style={statsStyles.emptyTitle}>暂无数据</Text>
             <Text style={statsStyles.emptySub}>添加衣物后显示统计</Text>
           </GlassCard>
         )}
       </ScrollView>
-    </SafeAreaView>
+        </SafeAreaView>
+    </GradientBackground>
   );
 };
 
 const statsStyles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
+  container: { flex: 1, backgroundColor: COLORS.card },
   topNav: {
     paddingHorizontal: SPACING.xl, paddingVertical: SPACING.sm,
-    backgroundColor: COLORS.glass,
-    borderBottomWidth: 1, borderBottomColor: COLORS.border,
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.12)',
   },
   topNavTitle: {
     fontSize: FONT_SIZES.xxl, fontWeight: '800',
@@ -158,9 +161,9 @@ const statsStyles = StyleSheet.create({
   },
   statCard: {
     width: '48%',
-    backgroundColor: COLORS.glass,
+    backgroundColor: 'rgba(255,255,255,0.85)',
     borderRadius: BORDER_RADIUS.xl,
-    borderWidth: 1, borderColor: COLORS.glassBorder,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.5)',
     padding: SPACING.lg, alignItems: 'center',
     ...SHADOWS.glass,
   },
@@ -190,7 +193,7 @@ const statsStyles = StyleSheet.create({
 
   emptyCard: { alignItems: 'center', paddingVertical: SPACING.xxl },
   emptyTitle: { fontSize: FONT_SIZES.lg, fontWeight: '600', color: COLORS.textSecondary, marginTop: SPACING.md },
-  emptySub: { fontSize: FONT_SIZES.sm, color: COLORS.textMuted, marginTop: SPACING.xs },
+  emptySub: { fontSize: FONT_SIZES.sm, color: 'rgba(0,0,0,0.35)', marginTop: SPACING.xs },
 });
 
 export default StatsScreen;

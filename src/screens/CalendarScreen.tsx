@@ -7,11 +7,12 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Image,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
 import { GlassCard, FAB, GlassPill } from '../components/glass/GlassComponents';
+import { GradientBackground } from '../components/glass/GradientBackground';
 import { RootStackParamList } from '../types';
 
 const MONTHS = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
@@ -101,7 +102,7 @@ const OutfitDetailCard = ({
     return (
       <GlassCard style={calStyles.detailCard}>
         <View style={calStyles.detailEmpty}>
-          <Icon name="hanger" size={36} color={COLORS.textMuted} />
+          <Icon name="hanger" size={36} color={'rgba(0,0,0,0.35)'} />
           <Text style={calStyles.detailEmptyTitle}>暂无穿搭记录</Text>
           <Text style={calStyles.detailEmptySub}>添加今日穿搭</Text>
           <TouchableOpacity style={calStyles.addBtn} onPress={onAdd}>
@@ -188,7 +189,8 @@ const CalendarScreen = () => {
   const recentRecords = useMemo(() => calendarRecords.slice(-5).reverse(), [calendarRecords]);
 
   return (
-    <SafeAreaView style={calStyles.container} edges={['top']}>
+    <GradientBackground>
+    <SafeAreaView style={[calStyles.container, { paddingTop: insets.top }]} edges={['top']}>
       {/* Top Nav */}
       <View style={calStyles.topNav}>
         <TouchableOpacity activeOpacity={0.75} onPress={prevMonth} style={calStyles.navBtn}>
@@ -255,7 +257,8 @@ const CalendarScreen = () => {
         icon="plus" onPress={() => nav.navigate('CreateOutfit', {})}
         style={{ bottom: insets.bottom + 84 }}
       />
-    </SafeAreaView>
+        </SafeAreaView>
+    </GradientBackground>
   );
 };
 
@@ -263,12 +266,12 @@ const CalendarScreen = () => {
 //  Styles
 // ============================================================
 const calStyles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
+  container: { flex: 1, backgroundColor: COLORS.card },
   topNav: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: SPACING.xl, paddingVertical: SPACING.sm,
-    backgroundColor: COLORS.glass,
-    borderBottomWidth: 1, borderBottomColor: COLORS.border,
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.12)',
   },
   monthTitle: { fontSize: FONT_SIZES.xl, fontWeight: '700', color: COLORS.textPrimary },
   navBtn: { width: 38, height: 38, borderRadius: BORDER_RADIUS.md, justifyContent: 'center', alignItems: 'center' },
@@ -303,7 +306,7 @@ const calStyles = StyleSheet.create({
   detailCard: { padding: SPACING.lg },
   detailEmpty: { alignItems: 'center', paddingVertical: SPACING.xl },
   detailEmptyTitle: { fontSize: FONT_SIZES.md, fontWeight: '600', color: COLORS.textSecondary, marginTop: SPACING.md },
-  detailEmptySub: { fontSize: FONT_SIZES.xs, color: COLORS.textMuted, marginTop: 3, marginBottom: SPACING.lg },
+  detailEmptySub: { fontSize: FONT_SIZES.xs, color: 'rgba(0,0,0,0.35)', marginTop: 3, marginBottom: SPACING.lg },
   addBtn: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: COLORS.primary,
@@ -321,11 +324,11 @@ const calStyles = StyleSheet.create({
   editLink: { fontSize: FONT_SIZES.sm, color: COLORS.primary, fontWeight: '600' },
   thumbsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm },
   thumbItem: { width: 64, alignItems: 'center' },
-  thumbImg: { width: 56, height: 56, borderRadius: BORDER_RADIUS.md, backgroundColor: COLORS.glassLight },
+  thumbImg: { width: 56, height: 56, borderRadius: BORDER_RADIUS.md, backgroundColor: 'rgba(255,255,255,0.65)' },
   thumbName: { fontSize: 9, color: COLORS.textSecondary, marginTop: 3, textAlign: 'center' },
   detailFooter: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    marginTop: SPACING.md, paddingTop: SPACING.md, borderTopWidth: 1, borderTopColor: COLORS.border,
+    marginTop: SPACING.md, paddingTop: SPACING.md, borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.12)',
   },
   editBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   editBtnText: { fontSize: FONT_SIZES.sm, color: COLORS.primary, fontWeight: '600' },

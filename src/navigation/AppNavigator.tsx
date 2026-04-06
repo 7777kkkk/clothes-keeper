@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Platform } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
 
 import HomeScreen from '../screens/HomeScreen';
@@ -21,24 +21,25 @@ import { RootTabParamList, RootStackParamList } from '../types';
 const Tab = createBottomTabNavigator<RootTabParamList>();
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+// Ionicons icon names for tabs
 const TAB_ICONS: Record<string, { active: string; inactive: string }> = {
-  Home: { active: 'wardrobe', inactive: 'wardrobe-outline' },
-  Outfit: { active: 'tshirt-crew', inactive: 'tshirt-crew-outline' },
-  Calendar: { active: 'calendar-month', inactive: 'calendar-month-outline' },
-  Stats: { active: 'chart-bar', inactive: 'chart-bar' },
-  My: { active: 'account-circle', inactive: 'account-circle-outline' },
+  Home: { active: 'shirt', inactive: 'shirt-outline' },
+  Outfit: { active: 'body', inactive: 'body-outline' },
+  Calendar: { active: 'calendar', inactive: 'calendar-outline' },
+  Stats: { active: 'stats-chart', inactive: 'stats-chart-outline' },
+  My: { active: 'person', inactive: 'person-outline' },
 };
 
-const DarkTheme = {
+const LightTheme = {
   ...DefaultTheme,
-  dark: true,
+  dark: false,
   colors: {
     ...DefaultTheme.colors,
     primary: COLORS.primary,
-    background: COLORS.background,
-    card: COLORS.tabBar,
+    background: 'transparent',
+    card: 'rgba(255,255,255,0.85)',
     text: COLORS.textPrimary,
-    border: COLORS.glassBorder,
+    border: 'rgba(255,255,255,0.5)',
     notification: COLORS.primary,
   },
 };
@@ -50,7 +51,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => (
         const { options } = descriptors[route.key];
         const label = options.title || route.name;
         const isFocused = state.index === index;
-        const icon = TAB_ICONS[route.name] || { active: 'circle', inactive: 'circle-outline' };
+        const icon = TAB_ICONS[route.name] || { active: 'ellipse', inactive: 'ellipse-outline' };
 
         const onPress = () => {
           const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
@@ -63,7 +64,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => (
               <Icon
                 name={isFocused ? icon.active : icon.inactive}
                 size={24}
-                color={isFocused ? COLORS.primary : COLORS.textMuted}
+                color={isFocused ? COLORS.primary : 'rgba(0,0,0,0.35)'}
                 onPress={onPress}
               />
             </View>
@@ -90,14 +91,14 @@ const MainTabs = () => (
 );
 
 const AppNavigator = () => (
-  <NavigationContainer theme={DarkTheme}>
+  <NavigationContainer theme={LightTheme}>
     <Stack.Navigator
       screenOptions={{
-        headerStyle: { backgroundColor: COLORS.tabBar },
-        headerTintColor: COLORS.textPrimary,
+        headerStyle: { backgroundColor: 'rgba(255,255,255,0.85)' },
+        headerTintColor: '#333',
         headerTitleStyle: { fontWeight: '600' as const, fontSize: FONT_SIZES.lg },
         headerShadowVisible: false,
-        contentStyle: { backgroundColor: COLORS.background },
+        contentStyle: { backgroundColor: 'transparent' },
       }}
     >
       <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
@@ -112,12 +113,12 @@ const AppNavigator = () => (
 
 const tabStyles = StyleSheet.create({
   tabBarOuter: {
-    backgroundColor: COLORS.tabBar,
+    backgroundColor: 'rgba(255,255,255,0.92)',
     borderTopWidth: 1,
-    borderTopColor: COLORS.tabBarBorder,
+    borderTopColor: 'rgba(255,255,255,0.6)',
     ...Platform.select({
-      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: -3 }, shadowOpacity: 0.35, shadowRadius: 12 },
-      android: { elevation: 12 },
+      ios: { shadowColor: 'rgba(0,0,0,0.12)', shadowOffset: { width: 0, height: -2 }, shadowOpacity: 1, shadowRadius: 8 },
+      android: { elevation: 8 },
     }),
   },
   tabBar: { flexDirection: 'row', paddingTop: SPACING.sm, paddingBottom: SPACING.sm, paddingHorizontal: SPACING.lg },
@@ -126,10 +127,10 @@ const tabStyles = StyleSheet.create({
     width: 44, height: 30, borderRadius: BORDER_RADIUS.md,
     alignItems: 'center', justifyContent: 'center',
   },
-  tabButtonFocused: { backgroundColor: COLORS.primarySoft },
-  tabLabel: { fontSize: 9, color: COLORS.textMuted, marginTop: 2, fontWeight: '500' },
+  tabButtonFocused: { backgroundColor: 'rgba(74,144,217,0.15)' },
+  tabLabel: { fontSize: 9, color: 'rgba(0,0,0,0.35)', marginTop: 2, fontWeight: '500' },
   tabLabelFocused: { color: COLORS.primary, fontWeight: '700' },
-  homeIndicator: { height: 34, backgroundColor: COLORS.tabBar },
+  homeIndicator: { height: 34, backgroundColor: 'rgba(255,255,255,0.92)' },
 });
 
 export default AppNavigator;

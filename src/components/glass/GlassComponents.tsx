@@ -1,16 +1,15 @@
 /**
- * GlassComponents — 玻璃拟态共享组件库
- * 深色毛玻璃风格，白色文字，缩小尺寸
+ * GlassComponents — 强制规范版（白色卡片 + Ionicons）
  */
 import React from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ViewStyle,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../../constants/theme';
 
 // ============================================================
-//  GlassCard — 亚克力毛玻璃卡片
+//  GlassCard — 半透明白色卡片
 // ============================================================
 export const GlassCard = ({
   children, style, padding = 'lg', onPress, activeOpacity = 0.85,
@@ -22,12 +21,12 @@ export const GlassCard = ({
   activeOpacity?: number;
 }) => {
   const cardStyle: ViewStyle = {
-    backgroundColor: COLORS.glass,
+    backgroundColor: COLORS.card,
     borderWidth: 1,
-    borderColor: COLORS.glassBorder,
-    borderRadius: BORDER_RADIUS.xl,
+    borderColor: 'rgba(255,255,255,0.5)',
+    borderRadius: BORDER_RADIUS.lg,
     padding: padding === 'none' ? 0 : SPACING[padding as keyof typeof SPACING],
-    ...SHADOWS.glass,
+    ...SHADOWS.card,
   };
   if (onPress) {
     return (
@@ -59,7 +58,7 @@ export const GlassPill = ({
       <Icon
         name={icon}
         size={size === 'sm' ? 11 : 13}
-        color={active ? '#fff' : COLORS.textSecondary}
+        color={active ? '#fff' : 'rgba(0,0,0,0.5)'}
         style={styles.pillIcon}
       />
     )}
@@ -70,10 +69,10 @@ export const GlassPill = ({
 );
 
 // ============================================================
-//  FAB — 悬浮操作按钮
+//  FAB — 悬浮操作按钮（固定右下角 #A2BDEA）
 // ============================================================
 export const FAB = ({
-  icon = 'plus', onPress, style, size = 'md', color = COLORS.primary,
+  icon = 'add', onPress, style, size = 'md', color = COLORS.fab,
 }: {
   icon?: string;
   onPress?: () => void;
@@ -118,7 +117,7 @@ export const SectionHeader = ({
 //  EmptyState — 空状态
 // ============================================================
 export const EmptyState = ({
-  icon, title, subtitle, actionLabel, onAction,
+  icon = 'shirt-outline', title, subtitle, actionLabel, onAction,
 }: {
   icon?: string;
   title: string;
@@ -127,10 +126,10 @@ export const EmptyState = ({
   onAction?: () => void;
 }) => (
   <View style={styles.emptyState}>
-    {icon && <Icon name={icon} size={56} color={COLORS.textMuted} />}
+    <Icon name={icon} size={52} color="rgba(0,0,0,0.2)" />
     <Text style={styles.emptyTitle}>{title}</Text>
     {subtitle && <Text style={styles.emptySubtitle}>{subtitle}</Text>}
-    {actionLabel && (
+    {actionLabel && onAction && (
       <TouchableOpacity style={styles.emptyBtn} onPress={onAction}>
         <Text style={styles.emptyBtnText}>{actionLabel}</Text>
       </TouchableOpacity>
@@ -151,7 +150,6 @@ export const Badge = ({ count, style }: { count: number; style?: ViewStyle }) =>
 //  Styles
 // ============================================================
 const styles = StyleSheet.create({
-  // --- Pill ---
   pill: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: SPACING.md, paddingVertical: SPACING.xs + 1,
@@ -161,21 +159,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.sm, paddingVertical: SPACING.xs,
   },
   pillInactive: {
-    backgroundColor: 'rgba(255,255,255,0.05)', borderColor: COLORS.border,
+    backgroundColor: 'rgba(0,0,0,0.06)', borderColor: 'rgba(0,0,0,0.12)',
   },
   pillActive: {
     backgroundColor: COLORS.primary, borderColor: COLORS.primary,
   },
   pillText: { fontSize: FONT_SIZES.sm, fontWeight: '600' },
   pillTextSm: { fontSize: FONT_SIZES.xs },
-  pillTextInactive: { color: COLORS.textSecondary },
+  pillTextInactive: { color: 'rgba(0,0,0,0.55)' },
   pillTextActive: { color: '#fff' },
   pillIcon: { marginRight: 2 },
 
-  // --- FAB ---
-  // (defined inline above for dynamic sizing)
-
-  // --- SectionHeader ---
   sectionHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: SPACING.xl, marginBottom: SPACING.md,
@@ -187,14 +181,13 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.sm, color: COLORS.primary, fontWeight: '600',
   },
 
-  // --- EmptyState ---
   emptyState: { alignItems: 'center', paddingVertical: 60 },
   emptyTitle: {
-    fontSize: FONT_SIZES.lg, fontWeight: 'bold', color: COLORS.textSecondary,
+    fontSize: FONT_SIZES.lg, fontWeight: 'bold', color: 'rgba(0,0,0,0.4)',
     marginTop: SPACING.lg, marginBottom: SPACING.xs,
   },
   emptySubtitle: {
-    fontSize: FONT_SIZES.sm, color: COLORS.textMuted,
+    fontSize: FONT_SIZES.sm, color: 'rgba(0,0,0,0.3)',
     marginBottom: SPACING.xl, textAlign: 'center',
   },
   emptyBtn: {
@@ -203,11 +196,10 @@ const styles = StyleSheet.create({
   },
   emptyBtnText: { color: '#fff', fontWeight: '700', fontSize: FONT_SIZES.sm },
 
-  // --- Badge ---
   badge: {
-    backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: BORDER_RADIUS.full,
+    backgroundColor: 'rgba(0,0,0,0.07)', borderRadius: BORDER_RADIUS.full,
     paddingHorizontal: SPACING.sm, paddingVertical: 2,
-    borderWidth: 1, borderColor: COLORS.border, minWidth: 22, alignItems: 'center',
+    borderWidth: 1, borderColor: 'rgba(0,0,0,0.1)', minWidth: 22, alignItems: 'center',
   },
-  badgeText: { fontSize: FONT_SIZES.xs, fontWeight: '700', color: COLORS.textSecondary },
+  badgeText: { fontSize: FONT_SIZES.xs, fontWeight: '700', color: 'rgba(0,0,0,0.55)' },
 });

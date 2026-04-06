@@ -1,145 +1,122 @@
 /**
- * Theme — Flix.id Dark Frosted Glass（深色毛玻璃拟态）
- *
- * 背景：深色磨砂底 + 半透明玻璃卡片
- * 文字：白色/浅灰（在高对比度深色背景上清晰可读）
- * 强调：低饱和冰蓝 #64B5F6
- *
- * 遵循 impeccable Skill:
- * - 低饱和度冷色系（不刺眼）
- * - 柔和阴影（不发散）
- * - 充足留白，节奏分明
+ * Theme — 强制规范版
+ * 渐变背景 + 白色卡片 + Ionicons
  */
 
+// 强制渐变背景色
+export const GRADIENT_COLORS = ['#dbeaff', '#d8f2fc', '#e1f8f6', '#f0fcf3', '#fefff7'];
+
+// ============================================================
+//  COLORS
+// ============================================================
 export const COLORS = {
-  // ---- 深色磨砂背景 ----
-  background: '#0F1724',
+  // ---- 强制背景（渐变用） ----
+  background: '#dbeaff',
 
-  // ---- 玻璃卡片（半透明深色） ----
-  glass: 'rgba(22, 32, 52, 0.78)',
-  glassLight: 'rgba(35, 48, 72, 0.55)',
-  glassBorder: 'rgba(255, 255, 255, 0.08)',
-  glassBorderLight: 'rgba(255, 255, 255, 0.04)',
+  // ---- 强制卡片（半透明白色） ----
+  card: 'rgba(255,255,255,0.85)',
 
-  // ---- 主强调色（低饱和冰蓝） ----
-  primary: '#64B5F6',
-  primarySoft: 'rgba(100, 181, 246, 0.15)',
-  primaryGlow: 'rgba(100, 181, 246, 0.30)',
+  // ---- 强制主文字 / 辅助文字 ----
+  textPrimary: '#FFFFFF',
+  textSecondary: '#CCE1FF',
 
-  // ---- 次要色（薄荷绿） ----
-  accent: '#4DB6AC',
-  accentSoft: 'rgba(77, 182, 172, 0.15)',
+  // ---- Tab Bar ----
+  tabBar: 'rgba(255,255,255,0.92)',
 
-  // ---- 文字（白色系，在深色背景上清晰） ----
-  textPrimary: 'rgba(255, 255, 255, 0.95)',
-  textSecondary: 'rgba(180, 200, 220, 0.65)',
-  textMuted: 'rgba(140, 165, 190, 0.45)',
+  // ---- 悬浮按钮（固定右下角） ----
+  fab: '#A2BDEA',
 
-  // ---- 边框 ----
-  border: 'rgba(255, 255, 255, 0.07)',
-  borderBright: 'rgba(255, 255, 255, 0.12)',
-
-  // ---- 状态色 ----
-  error: '#EF5350',
-  success: '#4DB6AC',
-  warning: '#FFB74D',
-
-  // ---- Tab Bar（深色玻璃） ----
-  tabBar: 'rgba(10, 16, 28, 0.92)',
-  tabBarBorder: 'rgba(255, 255, 255, 0.05)',
-
-  // ---- 覆盖层 ----
-  overlay: 'rgba(0, 0, 0, 0.50)',
+  // ---- 强调色 ----
+  primary: '#4A90D9',
+  accent: '#5AC8FA',
 
   // ---- 兼容别名 ----
-  card: 'rgba(22, 32, 52, 0.78)',
-  secondary: 'rgba(35, 48, 72, 0.55)',
+  glass: 'rgba(255,255,255,0.85)',
+  glassLight: 'rgba(255,255,255,0.65)',
+  glassBorder: 'rgba(255,255,255,0.3)',
+  secondary: 'rgba(255,255,255,0.60)',
+
+  // ---- 状态 ----
+  error: '#FF6B6B',
+  success: '#4CAF50',
+  warning: '#FFB74D',
 };
 
 // ============================================================
-//  Spacing — 4pt 基准，更紧凑
+//  Spacing
 // ============================================================
 export const SPACING = {
-  xs: 3,
-  sm: 6,
-  md: 10,
-  lg: 14,
-  xl: 20,
-  xxl: 28,
-  xxxl: 40,
+  xs: 4,
+  sm: 8,
+  md: 14,
+  lg: 20,
+  xl: 28,
+  xxl: 36,
+  xxxl: 48,
 };
 
 // ============================================================
-//  Font Sizes — 整体缩小一号
+//  Font Sizes
 // ============================================================
 export const FONT_SIZES = {
-  xs: 10,
-  sm: 12,
-  md: 14,
-  lg: 16,
-  xl: 18,
-  xxl: 22,
-  xxxl: 28,
+  xs: 11,
+  sm: 13,
+  md: 15,
+  lg: 17,
+  xl: 20,
+  xxl: 24,
+  xxxl: 30,
 };
 
 // ============================================================
-//  Border Radius — 大圆角玻璃拟态
+//  Border Radius — 强制大圆角 18px
 // ============================================================
 export const BORDER_RADIUS = {
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 22,
+  sm: 10,
+  md: 14,
+  lg: 18,   // 强制大圆角
+  xl: 24,
   full: 9999,
 };
 
 // ============================================================
-//  Shadows — 柔和蓝调阴影
+//  Shadows — 轻微阴影
 // ============================================================
 export const SHADOWS = {
-  // 玻璃卡片悬浮感
-  glass: {
-    shadowColor: 'rgba(100, 181, 246, 0.10)',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 16,
-    elevation: 6,
-  },
-
-  // 玻璃卡片（更轻）
-  glassSm: {
-    shadowColor: 'rgba(100, 181, 246, 0.07)',
+  card: {
+    shadowColor: 'rgba(0,0,0,0.10)',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 1,
     shadowRadius: 8,
     elevation: 3,
   },
-
-  // 按钮/标签微阴影
+  glass: {
+    shadowColor: 'rgba(0,0,0,0.08)',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  glassSm: {
+    shadowColor: 'rgba(0,0,0,0.06)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  fab: {
+    shadowColor: 'rgba(0,0,0,0.18)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 6,
+  },
   subtle: {
-    shadowColor: 'rgba(0, 0, 0, 0.20)',
+    shadowColor: 'rgba(0,0,0,0.08)',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 1,
     shadowRadius: 4,
     elevation: 2,
-  },
-
-  // FAB 悬浮阴影
-  fab: {
-    shadowColor: 'rgba(100, 181, 246, 0.25)',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 1,
-    shadowRadius: 14,
-    elevation: 10,
-  },
-
-  // 兼容
-  card: {
-    shadowColor: 'rgba(100, 181, 246, 0.10)',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 4,
   },
 };
 

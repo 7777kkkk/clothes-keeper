@@ -7,11 +7,12 @@ import {
   View, Text, StyleSheet, FlatList, TouchableOpacity, Image,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
 import { GlassCard, GlassPill, FAB, EmptyState } from '../components/glass/GlassComponents';
+import { GradientBackground } from '../components/glass/GradientBackground';
 import { RootStackParamList, Outfit } from '../types';
 
 const OutfitScreen = () => {
@@ -49,8 +50,8 @@ const OutfitScreen = () => {
             />
           ))}
           {items.length === 0 && (
-            <View style={[outfitStyles.thumb, { backgroundColor: COLORS.glassLight }]}>
-              <Icon name="hanger" size={20} color={COLORS.textMuted} />
+            <View style={[outfitStyles.thumb, { backgroundColor: 'rgba(255,255,255,0.65)' }]}>
+              <Icon name="hanger" size={20} color={'rgba(0,0,0,0.35)'} />
             </View>
           )}
         </View>
@@ -69,7 +70,8 @@ const OutfitScreen = () => {
   };
 
   return (
-    <SafeAreaView style={outfitStyles.container} edges={['top']}>
+    <GradientBackground>
+    <SafeAreaView style={[outfitStyles.container, { paddingTop: insets.top }]} edges={['top']}>
       {/* Top Nav */}
       <View style={outfitStyles.topNav}>
         <Text style={outfitStyles.topNavTitle}>我的搭配</Text>
@@ -109,7 +111,7 @@ const OutfitScreen = () => {
         contentContainerStyle={[outfitStyles.listContent, { paddingBottom: insets.bottom + 90 }]}
         ListEmptyComponent={
           <EmptyState
-            icon="tshirt-crew-outline"
+            icon="body-outline"
             title="还没有搭配"
             subtitle="创建第一个穿搭方案"
             actionLabel="新建搭配"
@@ -123,17 +125,18 @@ const OutfitScreen = () => {
         icon="plus" onPress={() => nav.navigate('CreateOutfit', {})}
         style={{ bottom: insets.bottom + 84 }}
       />
-    </SafeAreaView>
+        </SafeAreaView>
+    </GradientBackground>
   );
 };
 
 const outfitStyles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
+  container: { flex: 1, backgroundColor: COLORS.card },
   topNav: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: SPACING.xl, paddingVertical: SPACING.sm,
-    backgroundColor: COLORS.glass,
-    borderBottomWidth: 1, borderBottomColor: COLORS.border,
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.12)',
     gap: SPACING.md,
   },
   topNavTitle: {
@@ -143,7 +146,7 @@ const outfitStyles = StyleSheet.create({
   },
   addBtn: {
     width: 38, height: 38, borderRadius: BORDER_RADIUS.md,
-    backgroundColor: COLORS.primarySoft,
+    backgroundColor: 'rgba(74,144,217,0.2)',
     justifyContent: 'center', alignItems: 'center',
   },
   filterRow: {
@@ -160,7 +163,7 @@ const outfitStyles = StyleSheet.create({
   },
   thumb: {
     width: 80, height: 90,
-    backgroundColor: COLORS.glassLight,
+    backgroundColor: 'rgba(255,255,255,0.65)',
     borderRadius: BORDER_RADIUS.md,
   },
   outfitInfo: {},

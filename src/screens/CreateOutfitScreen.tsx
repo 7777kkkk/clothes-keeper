@@ -9,10 +9,11 @@ import {
   Image,
   Alert,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
+import { GradientBackground } from '../components/glass/GradientBackground';
 import { RootStackParamList } from '../types';
 
 type RouteProps = RouteProp<RootStackParamList, 'CreateOutfit'>;
@@ -96,6 +97,8 @@ const CreateOutfitScreen = () => {
   };
 
   return (
+    <GradientBackground>
+    <SafeAreaView style={{flex:1}}>
     <ScrollView style={[styles.container, { paddingBottom: insets.bottom + 80 }]}>
       <View style={{ height: insets.top > 0 ? 0 : SPACING.md }} />
       {/* 名称 */}
@@ -175,17 +178,19 @@ const CreateOutfitScreen = () => {
         </TouchableOpacity>
       )}
     </ScrollView>
-  );
+  </SafeAreaView>
+</GradientBackground>
+);
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.card,
   },
   section: {
     padding: SPACING.lg,
-    backgroundColor: COLORS.glass,
+    backgroundColor: 'rgba(255,255,255,0.85)',
     marginBottom: SPACING.sm,
   },
   label: {
@@ -195,7 +200,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   input: {
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.card,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.md,
     borderRadius: BORDER_RADIUS.sm,
@@ -215,9 +220,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
     borderRadius: BORDER_RADIUS.full,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.card,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(0,0,0,0.12)',
   },
   chipActive: {
     backgroundColor: COLORS.primary,
@@ -249,7 +254,7 @@ const styles = StyleSheet.create({
   itemImage: {
     width: '100%',
     height: '100%',
-    backgroundColor: COLORS.glassLight,
+    backgroundColor: 'rgba(255,255,255,0.65)',
   },
   checkmark: {
     position: 'absolute',

@@ -1,6 +1,5 @@
 /**
- * HomeScreen — 衣橱首页（分类管理模式）
- * 深色玻璃拟态，白色文字，更紧凑尺寸
+ * HomeScreen — 衣橱首页（强制渐变背景 + 白色卡片 + Ionicons）
  */
 import React, { useState, useMemo } from 'react';
 import {
@@ -8,18 +7,19 @@ import {
   Image, Modal, TextInput,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
 import { RootStackParamList, ClothingItem } from '../types';
 import { GlassCard, GlassPill, FAB, SectionHeader, EmptyState } from '../components/glass/GlassComponents';
+import { GradientBackground } from '../components/glass/GradientBackground';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 // ============================================================
-//  CategoryItemCard — 缩略图卡片
+//  ItemCard
 // ============================================================
 const ItemCard = ({ item, onPress }: { item: ClothingItem; onPress: () => void }) => (
   <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={styles.thumbCard}>
@@ -55,17 +55,17 @@ const CategorySection = ({
       </View>
       <View style={styles.catActions}>
         <TouchableOpacity activeOpacity={0.75} onPress={onAdd} style={styles.iconBtn}>
-          <Icon name="plus" size={16} color={COLORS.primary} />
+          <Icon name="add" size={16} color={COLORS.primary} />
         </TouchableOpacity>
         <TouchableOpacity activeOpacity={0.75} onPress={() => {}} style={styles.iconBtn}>
-          <Icon name="dots-horizontal" size={16} color={COLORS.textMuted} />
+          <Icon name="ellipsis-horizontal" size={16} color="rgba(0,0,0,0.35)" />
         </TouchableOpacity>
       </View>
     </View>
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.thumbsRow}>
       {items.length === 0 ? (
         <TouchableOpacity activeOpacity={0.75} onPress={onAdd} style={styles.emptyThumb}>
-          <Icon name="plus" size={22} color={COLORS.textMuted} />
+          <Icon name="add" size={22} color="rgba(0,0,0,0.3)" />
           <Text style={styles.emptyThumbText}>添加</Text>
         </TouchableOpacity>
       ) : (
@@ -93,17 +93,17 @@ const SearchModal = ({ visible, onClose, items, onItem }: {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={searchStyles.overlay}>
-        <GlassCard style={searchStyles.card} padding="none">
+        <View style={searchStyles.card}>
           <View style={searchStyles.inputRow}>
-            <Icon name="magnify" size={18} color={COLORS.textMuted} />
+            <Icon name="search" size={18} color="rgba(0,0,0,0.4)" />
             <TextInput
               style={searchStyles.input}
               placeholder="搜索衣物..."
-              placeholderTextColor={COLORS.textMuted}
+              placeholderTextColor="rgba(0,0,0,0.35)"
               value={q} onChangeText={setQ} autoFocus
             />
             <TouchableOpacity onPress={onClose}>
-              <Icon name="close" size={18} color={COLORS.textMuted} />
+              <Icon name="close" size={18} color="rgba(0,0,0,0.4)" />
             </TouchableOpacity>
           </View>
           <ScrollView style={searchStyles.results} showsVerticalScrollIndicator={false}>
@@ -120,7 +120,7 @@ const SearchModal = ({ visible, onClose, items, onItem }: {
               <Text style={searchStyles.noResult}>没有找到</Text>
             )}
           </ScrollView>
-        </GlassCard>
+        </View>
       </View>
     </Modal>
   );
@@ -148,15 +148,16 @@ const HomeScreen = () => {
   );
 
   return (
+    <GradientBackground>
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* 顶部导航 */}
-      <View style={styles.topNav}>
+      <View style={[styles.topNav, { paddingTop: insets.top + SPACING.sm }]}>
         <TouchableOpacity activeOpacity={0.75} onPress={() => setSearchVisible(true)} style={styles.topNavBtn}>
-          <Icon name="magnify" size={22} color={COLORS.textPrimary} />
+          <Icon name="search" size={22} color={COLORS.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.topNavTitle}>我的衣橱</Text>
         <TouchableOpacity activeOpacity={0.75} onPress={() => nav.navigate('CategoryManage')} style={styles.topNavBtn}>
-          <Icon name="playlist-edit" size={22} color={COLORS.textPrimary} />
+          <Icon name="create-outline" size={22} color={COLORS.textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -165,14 +166,14 @@ const HomeScreen = () => {
         {[
           { n: clothingItems.length, l: '单品', c: COLORS.primary },
           { n: categories.length, l: '分类', c: COLORS.accent },
-          { n: clothingItems.reduce((s, i) => s + (i.price || 0), 0), l: '总价值', c: '#FFB74D' },
+          { n: clothingItems.reduce((s, i) => s + (i.price || 0), 0), l: '总价值', c: '#888' },
         ].map((item, i) => (
-          <GlassCard key={i} style={styles.overviewCard} padding="sm">
-            <Text style={[styles.overviewNum, { color: item.c }]}>
+          <View key={i} style={styles.overviewCard}>
+            <Text style={[styles.overviewNum, { color: COLORS.textPrimary }]}>
               {typeof item.n === 'number' && item.n > 1000 ? `¥${item.n}` : item.n}
             </Text>
             <Text style={styles.overviewLbl}>{item.l}</Text>
-          </GlassCard>
+          </View>
         ))}
       </View>
 
@@ -192,17 +193,21 @@ const HomeScreen = () => {
           />
         ))}
         {groups.length === 0 && (
-          <EmptyState
-            icon="wardrobe-outline" title="暂无分类"
-            actionLabel="去添加" onAction={() => nav.navigate('CategoryManage')}
-          />
+          <View style={styles.emptyContainer}>
+            <Icon name="shirt-outline" size={48} color="rgba(0,0,0,0.2)" />
+            <Text style={styles.emptyText}>暂无分类</Text>
+            <TouchableOpacity onPress={() => nav.navigate('CategoryManage')}>
+              <Text style={styles.emptyAction}>去添加</Text>
+            </TouchableOpacity>
+          </View>
         )}
       </ScrollView>
 
       {/* FAB */}
       <FAB
-        icon="plus" onPress={() => nav.navigate('AddClothing')}
-        style={{ bottom: insets.bottom + 84 }}
+        icon="add"
+        onPress={() => nav.navigate('AddClothing')}
+        style={{ ...styles.fab, bottom: insets.bottom + 84 }}
       />
 
       <SearchModal
@@ -211,46 +216,48 @@ const HomeScreen = () => {
         onItem={id => nav.navigate('ClothingDetail', { itemId: id })}
       />
     </SafeAreaView>
+    </GradientBackground>
   );
 };
 
 // ============================================================
-//  Styles — 深色玻璃 + 紧凑尺寸
+//  Styles
 // ============================================================
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
+  container: { flex: 1 },
 
-  // Top Nav
   topNav: {
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: SPACING.xl, paddingVertical: SPACING.sm,
-    backgroundColor: COLORS.glass,
-    borderBottomWidth: 1, borderBottomColor: COLORS.border,
+    paddingHorizontal: SPACING.xl, paddingBottom: SPACING.sm,
+    backgroundColor: 'rgba(255,255,255,0.75)',
+    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.5)',
     gap: SPACING.md,
   },
   topNavTitle: {
     flex: 1, textAlign: 'center',
     fontSize: FONT_SIZES.xxl, fontWeight: '800',
-    color: COLORS.textPrimary, letterSpacing: -0.5,
+    color: COLORS.textPrimary,
   },
   topNavBtn: {
     width: 38, height: 38, borderRadius: BORDER_RADIUS.md,
     justifyContent: 'center', alignItems: 'center',
   },
 
-  // Overview
   overviewRow: {
     flexDirection: 'row', padding: SPACING.lg, gap: SPACING.sm,
   },
-  overviewCard: { flex: 1, alignItems: 'center', paddingVertical: SPACING.md },
+  overviewCard: {
+    flex: 1, alignItems: 'center', paddingVertical: SPACING.md,
+    backgroundColor: COLORS.card,
+    borderRadius: BORDER_RADIUS.lg,
+    ...SHADOWS.card,
+  },
   overviewNum: { fontSize: FONT_SIZES.xl, fontWeight: '800' },
   overviewLbl: { fontSize: FONT_SIZES.xs, color: COLORS.textSecondary, marginTop: 2, fontWeight: '500' },
 
-  // Main
   mainScroll: { flex: 1 },
   mainContent: { paddingTop: SPACING.sm },
 
-  // Category
   catSection: { marginBottom: SPACING.xxl },
   catHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
@@ -259,75 +266,90 @@ const styles = StyleSheet.create({
   catTitleRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
   catTitle: { fontSize: FONT_SIZES.lg, fontWeight: '700', color: COLORS.textPrimary },
   countBadge: {
-    backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: BORDER_RADIUS.full,
+    backgroundColor: 'rgba(0,0,0,0.08)', borderRadius: BORDER_RADIUS.full,
     paddingHorizontal: SPACING.sm, paddingVertical: 1,
-    borderWidth: 1, borderColor: COLORS.border,
   },
-  countText: { fontSize: FONT_SIZES.xs, color: COLORS.textSecondary, fontWeight: '600' },
+  countText: { fontSize: FONT_SIZES.xs, color: 'rgba(0,0,0,0.5)', fontWeight: '600' },
   catActions: { flexDirection: 'row', gap: SPACING.xs },
   iconBtn: {
     width: 32, height: 32, borderRadius: BORDER_RADIUS.sm,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(0,0,0,0.06)',
     justifyContent: 'center', alignItems: 'center',
   },
 
-  // Thumbs
   thumbsRow: { paddingHorizontal: SPACING.xl, gap: SPACING.sm },
   thumbCard: {
     width: 80, height: 104,
     borderRadius: BORDER_RADIUS.lg,
     overflow: 'hidden',
-    backgroundColor: COLORS.glassLight,
-    borderWidth: 1, borderColor: COLORS.glassBorder,
-    ...SHADOWS.glass,
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.5)',
+    ...SHADOWS.card,
   },
   thumbImg: { width: '100%', height: '100%' },
   multiBadge: {
     position: 'absolute', bottom: 4, right: 4,
-    backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 6,
+    backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: 6,
     paddingHorizontal: 4, paddingVertical: 1,
   },
   multiText: { fontSize: 9, color: '#fff', fontWeight: '700' },
   wearBadge: {
     position: 'absolute', top: 4, left: 4,
-    backgroundColor: COLORS.primarySoft, borderRadius: BORDER_RADIUS.full,
+    backgroundColor: 'rgba(74,144,217,0.25)', borderRadius: BORDER_RADIUS.full,
     paddingHorizontal: 5, paddingVertical: 1,
-    borderWidth: 1, borderColor: 'rgba(100,181,246,0.20)',
   },
   wearText: { fontSize: 9, color: COLORS.primary, fontWeight: '700' },
   emptyThumb: {
     width: 80, height: 104, borderRadius: BORDER_RADIUS.lg,
-    borderWidth: 2, borderColor: COLORS.border, borderStyle: 'dashed',
+    borderWidth: 2, borderColor: 'rgba(0,0,0,0.15)', borderStyle: 'dashed',
     justifyContent: 'center', alignItems: 'center', gap: 4,
   },
-  emptyThumbText: { fontSize: FONT_SIZES.xs, color: COLORS.textMuted },
+  emptyThumbText: { fontSize: FONT_SIZES.xs, color: 'rgba(0,0,0,0.35)' },
+
+  emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 80 },
+  emptyText: { fontSize: FONT_SIZES.lg, color: 'rgba(0,0,0,0.35)', marginTop: 12 },
+  emptyAction: { fontSize: FONT_SIZES.md, color: COLORS.primary, marginTop: 8, fontWeight: '600' },
+
+  fab: {
+    position: 'absolute', right: 20,
+    backgroundColor: COLORS.fab,
+    ...SHADOWS.fab,
+  },
 });
 
-// Search Modal Styles
 const searchStyles = StyleSheet.create({
   overlay: {
-    flex: 1, backgroundColor: COLORS.overlay,
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'flex-start', paddingTop: 100, alignItems: 'center',
   },
-  card: { width: '90%', maxHeight: '65%', overflow: 'hidden' },
+  card: {
+    width: '90%', maxHeight: '65%',
+    backgroundColor: 'rgba(255,255,255,0.97)',
+    borderRadius: BORDER_RADIUS.lg,
+    overflow: 'hidden',
+    ...SHADOWS.card,
+  },
   inputRow: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: SPACING.lg, paddingVertical: SPACING.sm,
-    borderBottomWidth: 1, borderBottomColor: COLORS.border,
+    borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.08)',
     gap: SPACING.sm,
   },
-  input: { flex: 1, fontSize: FONT_SIZES.md, color: COLORS.textPrimary },
+  input: { flex: 1, fontSize: FONT_SIZES.md, color: '#333' },
   results: { maxHeight: 320 },
   resultItem: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: SPACING.lg, paddingVertical: SPACING.sm,
     gap: SPACING.md,
   },
-  resultThumb: { width: 40, height: 40, borderRadius: BORDER_RADIUS.sm, backgroundColor: COLORS.glassLight },
-  resultName: { flex: 1, fontSize: FONT_SIZES.sm, fontWeight: '600', color: COLORS.textPrimary },
+  resultThumb: {
+    width: 40, height: 40, borderRadius: BORDER_RADIUS.sm,
+    backgroundColor: 'rgba(0,0,0,0.08)',
+  },
+  resultName: { flex: 1, fontSize: FONT_SIZES.sm, fontWeight: '600', color: '#333' },
   noResult: {
     textAlign: 'center', paddingVertical: SPACING.xl,
-    fontSize: FONT_SIZES.sm, color: COLORS.textMuted,
+    fontSize: FONT_SIZES.sm, color: 'rgba(0,0,0,0.4)',
   },
 });
 
