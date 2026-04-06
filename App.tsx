@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { StatusBar, View, Text, ActivityIndicator, StyleSheet, Platform } from 'react-native';
+import { StatusBar, View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { PaperProvider, MD3DarkTheme } from 'react-native-paper';
+import { PaperProvider, MD3LightTheme } from 'react-native-paper';
 import AppNavigator from './src/navigation/AppNavigator';
 import { useStore } from './src/store/useStore';
 import { COLORS } from './src/constants/theme';
 
-// 深色玻璃主题
+// 浅色 Paper 主题
 const paperTheme = {
-  ...MD3DarkTheme,
+  ...MD3LightTheme,
   colors: {
-    ...MD3DarkTheme.colors,
+    ...MD3LightTheme.colors,
     primary: COLORS.primary,
     secondary: COLORS.accent,
     background: COLORS.background,
@@ -52,8 +52,9 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <PaperProvider theme={paperTheme}>
+        {/* 透明状态栏，内容在下方 */}
         <StatusBar
-          barStyle="light-content"
+          barStyle="dark-content"
           backgroundColor="transparent"
           translucent
         />

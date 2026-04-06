@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Image,
   Modal,
-  Animated,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -15,7 +14,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useStore } from '../store/useStore';
 import {
-  COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS, GLASS,
+  COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS,
 } from '../constants/theme';
 import { RootStackParamList, Season } from '../types';
 
@@ -31,7 +30,7 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
 ];
 
 // ============================================================
-//  iOS 风格滑动开关（模式切换）
+//  iOS 风格滑动开关
 // ============================================================
 const ModeToggle = ({
   value,
@@ -43,18 +42,15 @@ const ModeToggle = ({
   const isOn = value === 'custom';
   return (
     <TouchableOpacity
-      activeOpacity={0.8}
+      activeOpacity={0.75}
       onPress={onToggle}
-      style={[
-        styles.toggleOuter,
-        isOn ? styles.toggleOuterOn : styles.toggleOuterOff,
-      ]}
+      style={[styles.toggleOuter, isOn ? styles.toggleOuterOn : styles.toggleOuterOff]}
     >
       <View style={[styles.toggleThumb, isOn ? styles.toggleThumbOn : styles.toggleThumbOff]}>
         <Icon
-          name={isOn ? 'view-grid-plus' : 'view-grid'}
-          size={12}
-          color={isOn ? COLORS.primary : COLORS.textMuted}
+          name={isOn ? 'view-dashboard' : 'view-grid'}
+          size={11}
+          color={isOn ? '#fff' : COLORS.textMuted}
         />
       </View>
     </TouchableOpacity>
@@ -62,10 +58,10 @@ const ModeToggle = ({
 };
 
 // ============================================================
-//  玻璃卡片组件
+//  玻璃拟态卡片（浅色亚克力版）
 // ============================================================
 const GlassCard = ({ children, style }: { children: React.ReactNode; style?: any }) => (
-  <View style={[GLASS.card, style]}>{children}</View>
+  <View style={[styles.glassCard, style]}>{children}</View>
 );
 
 // ============================================================
@@ -143,22 +139,17 @@ const HomeScreen = () => {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* ========== 顶部标题栏 ========== */}
       <View style={styles.header}>
-        {/* 左侧：iOS 滑动模式切换 */}
         <ModeToggle
           value={homeMode}
           onToggle={() => setHomeMode(isCustom ? 'default' : 'custom')}
         />
-
-        {/* 中间：标题 */}
         <Text style={styles.title}>我的衣橱</Text>
-
-        {/* 右侧：添加按钮 */}
         <TouchableOpacity
-          activeOpacity={0.8}
+          activeOpacity={0.75}
           onPress={() => navigation.navigate('AddClothing')}
           style={styles.addBtn}
         >
-          <Icon name="plus" size={20} color={COLORS.primary} />
+          <Icon name="plus" size={22} color={COLORS.primary} />
         </TouchableOpacity>
       </View>
 
@@ -198,14 +189,12 @@ const HomeScreen = () => {
                         style={styles.clothingImage}
                         resizeMode="cover"
                       />
-                      {/* 图片数量角标 */}
                       {item.images.length > 1 && (
                         <View style={styles.imageCountBadge}>
                           <Icon name="image-multiple" size={10} color="#fff" />
                           <Text style={styles.imageCountText}>{item.images.length}</Text>
                         </View>
                       )}
-                      {/* 穿搭次数 */}
                       {(item.wearCount || 0) > 0 && (
                         <View style={styles.wearCountBadge}>
                           <Text style={styles.wearCountText}>{item.wearCount}次</Text>
@@ -217,7 +206,6 @@ const HomeScreen = () => {
               </View>
             ))
           ) : (
-            /* 空状态 */
             <View style={styles.emptyState}>
               <Icon name="wardrobe-outline" size={72} color={COLORS.textMuted} />
               <Text style={styles.emptyTitle}>衣橱空空如也</Text>
@@ -237,7 +225,7 @@ const HomeScreen = () => {
       {/* ========== 自主模式：网格 + 工具栏 ========== */}
       {isCustom && (
         <>
-          {/* 工具栏：筛选 + 排序 */}
+          {/* 工具栏 */}
           <View style={styles.toolbar}>
             <TouchableOpacity
               activeOpacity={0.8}
@@ -264,18 +252,15 @@ const HomeScreen = () => {
                   key={opt.key}
                   activeOpacity={0.75}
                   onPress={() => setHomeSort(opt.key)}
-                  style={[
-                    styles.sortBtn,
-                    homeSortBy === opt.key && styles.sortBtnActive,
-                  ]}
+                  style={[styles.sortBtn, homeSortBy === opt.key && styles.sortBtnActive]}
                 >
                   <Text style={[styles.sortBtnText, homeSortBy === opt.key && styles.sortBtnTextActive]}>
                     {opt.label}
                   </Text>
                   {homeSortBy === opt.key && (
                     <Icon
-                      name={homeSortOrder === 'asc' ? 'arrow-up' : 'arrow-down'}
-                      size={11}
+                      name={homeSortOrder === 'asc' ? 'chevron-up' : 'chevron-down'}
+                      size={13}
                       color={COLORS.primary}
                     />
                   )}
@@ -309,10 +294,7 @@ const HomeScreen = () => {
           {/* 网格内容 */}
           <ScrollView
             style={styles.scrollView}
-            contentContainerStyle={[
-              styles.gridContainer,
-              { paddingBottom: insets.bottom + 90 },
-            ]}
+            contentContainerStyle={[styles.gridContainer, { paddingBottom: insets.bottom + 90 }]}
             showsVerticalScrollIndicator={false}
           >
             {filteredItems.length > 0 ? (
@@ -427,7 +409,7 @@ const HomeScreen = () => {
 };
 
 // ============================================================
-//  Styles — Modern Flix Glass UI
+//  Styles — Light Glass UI
 // ============================================================
 const styles = StyleSheet.create({
   container: {
@@ -439,7 +421,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: SPACING.lg,
+    paddingHorizontal: SPACING.xl,
     paddingVertical: SPACING.md,
     gap: SPACING.md,
   },
@@ -455,10 +437,10 @@ const styles = StyleSheet.create({
   toggleOuterOn: {
     backgroundColor: COLORS.primarySoft,
     borderWidth: 1,
-    borderColor: 'rgba(100, 180, 255, 0.30)',
+    borderColor: 'rgba(59,130,246,0.25)',
   },
   toggleOuterOff: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(0,0,0,0.06)',
     borderWidth: 1,
     borderColor: COLORS.border,
   },
@@ -491,7 +473,7 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.md,
     backgroundColor: COLORS.primarySoft,
     borderWidth: 1,
-    borderColor: 'rgba(100, 180, 255, 0.20)',
+    borderColor: 'rgba(59,130,246,0.20)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -517,7 +499,7 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
   },
   categoryCountBadge: {
-    backgroundColor: COLORS.glassLight,
+    backgroundColor: 'rgba(0,0,0,0.05)',
     borderRadius: BORDER_RADIUS.full,
     paddingHorizontal: SPACING.sm,
     paddingVertical: 2,
@@ -546,7 +528,7 @@ const styles = StyleSheet.create({
   clothingImage: {
     width: '100%',
     height: '100%',
-    backgroundColor: COLORS.glassLight,
+    backgroundColor: 'rgba(0,0,0,0.05)',
   },
   imageCountBadge: {
     position: 'absolute',
@@ -554,7 +536,7 @@ const styles = StyleSheet.create({
     right: 6,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: 'rgba(0,0,0,0.45)',
     borderRadius: 8,
     paddingHorizontal: 5,
     paddingVertical: 2,
@@ -574,7 +556,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderWidth: 1,
-    borderColor: 'rgba(100,180,255,0.25)',
+    borderColor: 'rgba(59,130,246,0.20)',
   },
   wearCountText: {
     fontSize: 9,
@@ -659,7 +641,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     gap: 4,
     borderWidth: 1,
-    borderColor: 'rgba(100,180,255,0.25)',
+    borderColor: 'rgba(59,130,246,0.20)',
   },
   filterTagText: {
     fontSize: FONT_SIZES.xs,
@@ -687,7 +669,7 @@ const styles = StyleSheet.create({
   gridCardImage: {
     width: '100%',
     height: 160,
-    backgroundColor: COLORS.glassLight,
+    backgroundColor: 'rgba(0,0,0,0.05)',
   },
   gridCardBody: {
     padding: SPACING.md,
@@ -708,7 +690,7 @@ const styles = StyleSheet.create({
     right: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.45)',
     borderRadius: 8,
     paddingHorizontal: 5,
     paddingVertical: 2,
@@ -725,7 +707,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs + 2,
     borderRadius: BORDER_RADIUS.full,
-    backgroundColor: COLORS.glassLight,
+    backgroundColor: 'rgba(0,0,0,0.05)',
     borderWidth: 1,
     borderColor: COLORS.border,
   },
@@ -769,7 +751,7 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.md,
     borderRadius: BORDER_RADIUS.full,
     gap: 6,
-    ...SHADOWS.glass,
+    ...SHADOWS.subtle,
   },
   emptyAddBtnText: {
     color: '#fff',
@@ -777,7 +759,7 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.md,
   },
   clearFilterBtn: {
-    backgroundColor: COLORS.glassLight,
+    backgroundColor: 'rgba(0,0,0,0.05)',
     paddingHorizontal: SPACING.xl,
     paddingVertical: SPACING.md,
     borderRadius: BORDER_RADIUS.full,
@@ -788,6 +770,15 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontWeight: '600',
     fontSize: FONT_SIZES.md,
+  },
+
+  // ---- 玻璃卡片 ----
+  glassCard: {
+    backgroundColor: '#fff',
+    borderRadius: BORDER_RADIUS.xl,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    ...SHADOWS.card,
   },
 
   // ---- 筛选弹窗 ----

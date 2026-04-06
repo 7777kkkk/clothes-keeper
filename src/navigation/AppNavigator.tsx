@@ -31,17 +31,17 @@ const TAB_ICONS: Record<string, { active: string; inactive: string }> = {
   My: { active: 'account-circle', inactive: 'account-circle-outline' },
 };
 
-// 深色玻璃导航主题
-const DarkTheme = {
+// 浅色玻璃导航主题
+const LightTheme = {
   ...DefaultTheme,
-  dark: true,
+  dark: false,
   colors: {
     ...DefaultTheme.colors,
     primary: COLORS.primary,
     background: COLORS.background,
     card: COLORS.tabBar,
     text: COLORS.textPrimary,
-    border: COLORS.glassBorder,
+    border: COLORS.border,
     notification: COLORS.primary,
   },
 };
@@ -109,7 +109,13 @@ const MainTabs = () => {
 
 // 通用 Stack 屏幕配置
 const screenOptions = {
-  headerStyle: { backgroundColor: COLORS.glass },
+  headerStyle: {
+    backgroundColor: COLORS.tabBar,
+    elevation: 0,
+    shadowOpacity: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
   headerTintColor: COLORS.textPrimary,
   headerTitleStyle: { fontWeight: '600' as const, fontSize: FONT_SIZES.lg },
   headerShadowVisible: false,
@@ -120,7 +126,7 @@ const screenOptions = {
 // 根 Stack
 const AppNavigator = () => {
   return (
-    <NavigationContainer theme={DarkTheme}>
+    <NavigationContainer theme={LightTheme}>
       <Stack.Navigator screenOptions={screenOptions}>
         <Stack.Screen
           name="MainTabs"
@@ -162,7 +168,17 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.tabBar,
     borderTopWidth: 1,
     borderTopColor: COLORS.tabBarBorder,
-    ...SHADOWS.tabBar,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#94A3B8',
+        shadowOffset: { width: 0, height: -3 },
+        shadowOpacity: 0.10,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
   tabBar: {
     flexDirection: 'row',

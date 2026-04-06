@@ -3,48 +3,48 @@
 // ============================================================
 
 export const COLORS = {
-  // 主背景（深邃冷色调）
-  background: 'rgba(14, 20, 30, 0.96)',
+  // 主背景（白色纯净底色）
+  background: '#FFFFFF',
 
-  // 玻璃卡片（半透明）
-  glass: 'rgba(30, 42, 62, 0.72)',
-  glassLight: 'rgba(50, 70, 100, 0.55)',
-  glassBorder: 'rgba(255, 255, 255, 0.10)',
-  glassBorderLight: 'rgba(255, 255, 255, 0.06)',
+  // 玻璃卡片（亚克力半透明效果）
+  glass: 'rgba(240, 244, 250, 0.82)',
+  glassLight: 'rgba(248, 250, 255, 0.65)',
+  glassBorder: 'rgba(0, 0, 0, 0.08)',
+  glassBorderLight: 'rgba(0, 0, 0, 0.04)',
 
-  // 主强调色（柔和冰蓝）
-  primary: 'rgba(100, 180, 255, 1)',
-  primarySoft: 'rgba(100, 180, 255, 0.18)',
-  primaryGlow: 'rgba(100, 180, 255, 0.35)',
+  // 主强调色（纯净冰蓝）
+  primary: '#3B82F6',
+  primarySoft: 'rgba(59, 130, 246, 0.12)',
+  primaryGlow: 'rgba(59, 130, 246, 0.25)',
 
-  // 次要色（墨绿/青灰）
-  accent: 'rgba(80, 200, 180, 1)',
-  accentSoft: 'rgba(80, 200, 180, 0.15)',
+  // 次要色（薄荷绿）
+  accent: '#10B981',
+  accentSoft: 'rgba(16, 185, 129, 0.12)',
 
-  // 文字（低饱和度白）
-  textPrimary: 'rgba(240, 245, 255, 0.95)',
-  textSecondary: 'rgba(180, 200, 220, 0.65)',
-  textMuted: 'rgba(140, 165, 195, 0.45)',
+  // 文字（深色系，适合白色底）
+  textPrimary: 'rgba(15, 23, 42, 0.95)',
+  textSecondary: 'rgba(100, 116, 139, 0.70)',
+  textMuted: 'rgba(148, 163, 184, 0.55)',
 
   // 边框
-  border: 'rgba(255, 255, 255, 0.08)',
-  borderBright: 'rgba(255, 255, 255, 0.15)',
+  border: 'rgba(0, 0, 0, 0.08)',
+  borderBright: 'rgba(0, 0, 0, 0.14)',
 
   // 状态色
   error: 'rgba(255, 100, 110, 1)',
   success: 'rgba(80, 220, 160, 1)',
   warning: 'rgba(255, 200, 100, 1)',
 
-  // Tab Bar（玻璃效果）
-  tabBar: 'rgba(10, 15, 25, 0.88)',
-  tabBarBorder: 'rgba(255, 255, 255, 0.06)',
+  // Tab Bar（玻璃亚克力）
+  tabBar: 'rgba(255, 255, 255, 0.92)',
+  tabBarBorder: 'rgba(0, 0, 0, 0.06)',
 
   // 覆盖层
-  overlay: 'rgba(0, 0, 0, 0.55)',
+  overlay: 'rgba(0, 0, 0, 0.40)',
 
-  // 阴影（带冷色调）
-  shadowColor: 'rgba(0, 80, 160, 0.35)',
-  shadowColorLight: 'rgba(0, 40, 100, 0.20)',
+  // 阴影（柔和蓝灰色调）
+  shadowColor: 'rgba(59, 130, 246, 0.18)',
+  shadowColorLight: 'rgba(0, 0, 0, 0.08)',
 
   // ========================================
   // 兼容别名（供旧页面使用，逐步迁移）
