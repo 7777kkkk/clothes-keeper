@@ -14,8 +14,7 @@
 | Frontend | React Native (Expo) | 跨平台，支持 iOS/Android |
 | State Management | Zustand | 轻量级状态管理 |
 | Navigation | React Navigation 6 | 底部 Tab + Stack 导航 |
-| Backend/Storage | LeanCloud | 云数据库 + 文件存储（免服务器） |
-| Image Storage | LeanCloud File | 衣物图片存储 |
+| Backend/Storage | AsyncStorage | 本地存储（手机自带存储） |
 | Push Notifications | Expo Notifications | 重要更新推送 |
 | CI/CD | GitHub Actions | 每次 push 自动通知 |
 
@@ -194,11 +193,11 @@
 
 ## 7. Milestones
 
-### v0.1 - 基础框架 ✅ (目标：今天完成)
+### v0.1 - 基础框架 ✅
 - [x] SPEC.md 编写
 - [x] 项目初始化（Expo + React Native）
 - [x] 导航框架
-- [x] LeanCloud 初始化
+- [x] AsyncStorage 本地存储集成
 
 ### v0.2 - 衣橱核心功能 🔄 (进行中)
 - [ ] 品类分类管理页面
