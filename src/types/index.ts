@@ -14,7 +14,8 @@ export interface ClothingItem {
   images: string[];
   categoryId: string;
   seasons: Season[];
-  storageLocation: string;
+  locationType: LocationType;  // 存放位置类型：家/学校
+  locationDetail: string;      // 具体位置备注，如"卧室衣柜第二层"
   brand: string;
   price: number;
   purchaseDate: Date | null;
@@ -22,6 +23,9 @@ export interface ClothingItem {
   createdAt: Date;
   updatedAt: Date;
 }
+
+// 存放位置类型
+export type LocationType = '家' | '学校';
 
 // 季节
 export type Season = '春' | '夏' | '秋' | '冬';

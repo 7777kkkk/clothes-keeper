@@ -29,6 +29,13 @@ const HomeScreen = () => {
     return matchCategory && matchSearch;
   });
 
+  const getLocationText = (item: any) => {
+    if (item.locationDetail) {
+      return `${item.locationType} - ${item.locationDetail}`;
+    }
+    return item.locationType || '未设置';
+  };
+
   const renderItem = ({ item }: { item: any }) => (
     <TouchableOpacity
       style={styles.card}
@@ -39,6 +46,9 @@ const HomeScreen = () => {
         <Text style={styles.cardName} numberOfLines={2}>{item.name}</Text>
         <Text style={styles.cardCategory}>
           {categories.find(c => c.id === item.categoryId)?.name || '未分类'}
+        </Text>
+        <Text style={styles.cardLocation}>
+          📍 {getLocationText(item)}
         </Text>
       </View>
     </TouchableOpacity>
@@ -213,6 +223,11 @@ const styles = StyleSheet.create({
   cardCategory: {
     fontSize: FONT_SIZES.xs,
     color: COLORS.textSecondary,
+  },
+  cardLocation: {
+    fontSize: FONT_SIZES.xs,
+    color: COLORS.accent,
+    marginTop: 2,
   },
   empty: {
     flex: 1,

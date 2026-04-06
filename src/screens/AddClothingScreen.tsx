@@ -13,9 +13,10 @@ import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../constants/theme';
-import { Season } from '../types';
+import { Season, LocationType } from '../types';
 
 const SEASONS: Season[] = ['春', '夏', '秋', '冬'];
+const LOCATION_TYPES: LocationType[] = ['家', '学校'];
 
 const AddClothingScreen = () => {
   const navigation = useNavigation();
@@ -25,7 +26,8 @@ const AddClothingScreen = () => {
   const [name, setName] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [selectedSeasons, setSelectedSeasons] = useState<Season[]>([]);
-  const [storageLocation, setStorageLocation] = useState('');
+  const [locationType, setLocationType] = useState<LocationType>('家');
+  const [locationDetail, setLocationDetail] = useState('');
   const [brand, setBrand] = useState('');
   const [price, setPrice] = useState('');
   const [notes, setNotes] = useState('');
@@ -87,7 +89,8 @@ const AddClothingScreen = () => {
       images,
       categoryId,
       seasons: selectedSeasons,
-      storageLocation: storageLocation.trim(),
+      locationType,
+      locationDetail: locationDetail.trim(),
       brand: brand.trim(),
       price: parseFloat(price) || 0,
       purchaseDate: null,
@@ -169,14 +172,27 @@ const AddClothingScreen = () => {
         </View>
       </View>
 
-      {/* 收纳位置 */}
+      {/* 存放位置 */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>收纳位置</Text>
+        <Text style={styles.sectionTitle}>📍 存放位置</Text>
+        <View style={styles.chipGroup}>
+          {LOCATION_TYPES.map(loc => (
+            <TouchableOpacity
+              key={loc}
+              style={[styles.chip, locationType === loc && styles.chipActive]}
+              onPress={() => setLocationType(loc)}
+            >
+              <Text style={[styles.chipText, locationType === loc && styles.chipTextActive]}>
+                {loc}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
         <TextInput
-          style={styles.input}
-          placeholder="如：卧室衣柜第二层"
-          value={storageLocation}
-          onChangeText={setStorageLocation}
+          style={[styles.input, styles.locationDetailInput]}
+          placeholder="具体位置备注（选填），如：卧室衣柜第二层"
+          value={locationDetail}
+          onChangeText={setLocationDetail}
           placeholderTextColor={COLORS.textSecondary}
         />
       </View>
@@ -280,6 +296,9 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.sm,
     fontSize: FONT_SIZES.md,
     color: COLORS.textPrimary,
+  },
+  locationDetailInput: {
+    marginTop: SPACING.sm,
   },
   textArea: {
     height: 80,

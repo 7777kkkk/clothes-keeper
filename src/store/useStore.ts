@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Category, ClothingItem, Outfit, Occasion, CalendarRecord } from '../types';
+import { Category, ClothingItem, Outfit, Occasion, CalendarRecord, LocationType } from '../types';
 import { DEFAULT_CATEGORIES, DEFAULT_OCCASIONS } from '../constants/theme';
 
 const STORAGE_KEY = '@clothes_keeper_data';
@@ -50,16 +50,105 @@ interface AppState {
 
 const generateId = () => Math.random().toString(36).substring(2, 15);
 
-// 序列化时转换 Date 为字符串
-const serialize = (state: Omit<AppState, 'isLoaded' | 'loadData' | 'saveData' | 'addCategory' | 'updateCategory' | 'deleteCategory' | 'addClothingItem' | 'updateClothingItem' | 'deleteClothingItem' | 'addOutfit' | 'updateOutfit' | 'deleteOutfit' | 'addOccasion' | 'updateOccasion' | 'deleteOccasion' | 'addCalendarRecord' | 'updateCalendarRecord' | 'deleteCalendarRecord'>) => {
-  return JSON.stringify({
-    categories: state.categories,
-    clothingItems: state.clothingItems,
-    outfits: state.outfits,
-    occasions: state.occasions,
-    calendarRecords: state.calendarRecords,
-  });
-};
+// 演示数据
+const SAMPLE_CLOTHING_ITEMS: Omit<ClothingItem, 'id' | 'createdAt' | 'updatedAt'>[] = [
+  {
+    name: '黑色休闲西装外套',
+    images: ['https://picsum.photos/400/600?random=1'],
+    categoryId: '1',
+    seasons: ['春', '秋'],
+    locationType: '家',
+    locationDetail: '卧室衣柜第二层',
+    brand: 'UNIQLO',
+    price: 599,
+    purchaseDate: new Date('2025-03-15'),
+    notes: '春秋百搭款，搭配白色T恤很好看',
+  },
+  {
+    name: '白色纯棉T恤',
+    images: ['https://picsum.photos/400/600?random=2'],
+    categoryId: '1',
+    seasons: ['春', '夏', '秋'],
+    locationType: '家',
+    locationDetail: '卧室衣柜第一层',
+    brand: 'UNIQLO',
+    price: 79,
+    purchaseDate: new Date('2025-04-20'),
+    notes: '基础款，万能内搭',
+  },
+  {
+    name: '深蓝色牛仔裤',
+    images: ['https://picsum.photos/400/600?random=3'],
+    categoryId: '2',
+    seasons: ['春', '秋', '冬'],
+    locationType: '家',
+    locationDetail: '卧室衣柜下层',
+    brand: "Levi's",
+    price: 699,
+    purchaseDate: new Date('2025-01-10'),
+    notes: '经典款版型很好',
+  },
+  {
+    name: '黑色帆布鞋',
+    images: ['https://picsum.photos/400/600?random=4'],
+    categoryId: '4',
+    seasons: ['春', '夏', '秋'],
+    locationType: '家',
+    locationDetail: '鞋柜第一层',
+    brand: 'Converse',
+    price: 469,
+    purchaseDate: new Date('2025-02-14'),
+    notes: '万年经典款',
+  },
+  {
+    name: '灰色卫衣',
+    images: ['https://picsum.photos/400/600?random=5'],
+    categoryId: '1',
+    seasons: ['秋', '冬'],
+    locationType: '学校',
+    locationDetail: '宿舍衣柜',
+    brand: 'Nike',
+    price: 399,
+    purchaseDate: new Date('2025-11-05'),
+    notes: '冬天必备，舒适百搭',
+  },
+  {
+    name: '黑色双肩包',
+    images: ['https://picsum.photos/400/600?random=6'],
+    categoryId: '5',
+    seasons: ['春', '夏', '秋', '冬'],
+    locationType: '学校',
+    locationDetail: '宿舍书桌旁',
+    brand: '小米',
+    price: 169,
+    purchaseDate: new Date('2025-08-20'),
+    notes: '日常上课用，容量很大',
+  },
+  {
+    name: '碎花连衣裙',
+    images: ['https://picsum.photos/400/600?random=7'],
+    categoryId: '3',
+    seasons: ['夏'],
+    locationType: '家',
+    locationDetail: '卧室衣柜第三层',
+    brand: 'ZARA',
+    price: 299,
+    purchaseDate: new Date('2025-06-18'),
+    notes: '约会穿很好看',
+  },
+  {
+    name: '运动短裤',
+    images: ['https://picsum.photos/400/600?random=8'],
+    categoryId: '2',
+    seasons: ['夏'],
+    locationType: '学校',
+    locationDetail: '宿舍衣柜',
+    brand: 'Nike',
+    price: 199,
+    purchaseDate: new Date('2025-05-01'),
+    notes: '跑步健身穿',
+  },
+];
 
 export const useStore = create<AppState>((set, get) => ({
   // 初始数据
@@ -102,7 +191,26 @@ export const useStore = create<AppState>((set, get) => ({
           isLoaded: true,
         });
       } else {
-        set({ isLoaded: true });
+        // 首次使用，添加演示数据
+        const sampleItems = SAMPLE_CLOTHING_ITEMS.map(item => ({
+          ...item,
+          id: generateId(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }));
+        set({
+          clothingItems: sampleItems,
+          isLoaded: true,
+        });
+        // 保存演示数据
+        const initialData = {
+          categories: DEFAULT_CATEGORIES.map(c => ({ ...c, createdAt: new Date() })),
+          clothingItems: sampleItems,
+          outfits: [],
+          occasions: DEFAULT_OCCASIONS.map(o => ({ ...o })),
+          calendarRecords: [],
+        };
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(initialData));
       }
     } catch (e) {
       console.error('Failed to load data:', e);

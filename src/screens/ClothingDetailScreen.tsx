@@ -46,6 +46,13 @@ const ClothingDetailScreen = () => {
     ]);
   };
 
+  const getLocationText = () => {
+    if (item.locationDetail) {
+      return `${item.locationType} - ${item.locationDetail}`;
+    }
+    return item.locationType;
+  };
+
   return (
     <ScrollView style={styles.container}>
       {/* 图片轮播 */}
@@ -72,12 +79,10 @@ const ClothingDetailScreen = () => {
 
       {/* 详细信息 */}
       <View style={styles.section}>
-        {item.storageLocation && (
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>📍 收纳位置</Text>
-            <Text style={styles.infoValue}>{item.storageLocation}</Text>
-          </View>
-        )}
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>📍 存放位置</Text>
+          <Text style={styles.infoValue}>{getLocationText()}</Text>
+        </View>
         {item.brand && (
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>🏷️ 品牌</Text>
@@ -162,6 +167,7 @@ const styles = StyleSheet.create({
   infoValue: {
     fontSize: FONT_SIZES.md,
     color: COLORS.textPrimary,
+    fontWeight: '500',
   },
   notes: {
     fontSize: FONT_SIZES.md,

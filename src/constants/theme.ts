@@ -55,6 +55,9 @@ export const DEFAULT_OCCASIONS = [
   { id: '5', name: '在家', order: 4 },
 ];
 
+// 存放位置选项
+export const LOCATION_TYPES = ['家', '学校'] as const;
+
 // 默认品类
 export const DEFAULT_CATEGORIES = [
   { id: '1', name: '上衣', parentId: null, order: 0 },
