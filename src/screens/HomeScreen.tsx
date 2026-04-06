@@ -127,11 +127,173 @@ const SearchModal = ({ visible, onClose, items, onItem }: {
 // ============================================================
 //  HomeScreen
 // ============================================================
+// ============================================================
+//  SelfServiceMode — 自主模式列表（单列卡片+筛选排序）
+// ============================================================
+const SORT_OPTIONS = [
+  { value: 'createdAt_desc', label: '最新添加' },
+  { value: 'createdAt_asc', label: '最早添加' },
+  { value: 'name_asc', label: '名称 A→Z' },
+  { value: 'price_desc', label: '价格 高→低' },
+  { value: 'price_asc', label: '价格 低→高' },
+] as const;
+
+const SelfServiceMode = ({
+  items, categories, onItem, onAdd,
+}: {
+  items: ClothingItem[];
+  categories: { id: string; name: string }[];
+  onItem: (id: string) => void;
+  onAdd: () => void;
+}) => {
+  const [selectedCats, setSelectedCats] = useState<string[]>([]);
+  const [selectedSeasons, setSelectedSeasons] = useState<string[]>([]);
+  const [sortValue, setSortValue] = useState<string>('createdAt_desc');
+  const [filterOpen, setFilterOpen] = useState(false);
+
+  const SEASONS = ['春', '夏', '秋', '冬'];
+
+  const toggleCat = (id: string) =>
+    setSelectedCats(prev => prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]);
+  const toggleSeason = (s: string) =>
+    setSelectedSeasons(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
+  const clearFilter = () => { setSelectedCats([]); setSelectedSeasons([]); setSortValue('createdAt_desc'); };
+
+  const filtered = useMemo(() => {
+    let result = [...items];
+    if (selectedCats.length > 0)
+      result = result.filter(i => selectedCats.includes(i.categoryId));
+    if (selectedSeasons.length > 0)
+      result = result.filter(i => i.seasons.some(s => selectedSeasons.includes(s)));
+    const [field, dir] = sortValue.split('_') as [string, 'asc' | 'desc'];
+    result.sort((a, b) => {
+      let va: any = a[field as keyof ClothingItem];
+      let vb: any = b[field as keyof ClothingItem];
+      if (field === 'name') { va = String(va || '').toLowerCase(); vb = String(vb || '').toLowerCase(); }
+      if (va < vb) return dir === 'asc' ? -1 : 1;
+      if (va > vb) return dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return result;
+  }, [items, selectedCats, selectedSeasons, sortValue]);
+
+  const hasFilter = selectedCats.length > 0 || selectedSeasons.length > 0;
+  const sortLabel = SORT_OPTIONS.find(s => s.value === sortValue)?.label ?? '排序';
+
+  return (
+    <View style={selfStyles.container}>
+      {/* 筛选排序栏 */}
+      <View style={selfStyles.filterBar}>
+        <TouchableOpacity
+          style={[selfStyles.filterBtn, hasFilter && selfStyles.filterBtnActive]}
+          onPress={() => setFilterOpen(!filterOpen)}
+        >
+          <Icon name="options-outline" size={16} color={hasFilter ? COLORS.primary : COLORS.textSecondary} />
+          <Text style={[selfStyles.filterBtnText, hasFilter && selfStyles.filterBtnTextActive]}>
+            {hasFilter ? `筛选 (${selectedCats.length + selectedSeasons.length})` : '筛选'}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={selfStyles.sortBtn} onPress={() => {
+          const idx = SORT_OPTIONS.findIndex(s => s.value === sortValue);
+          const next = SORT_OPTIONS[(idx + 1) % SORT_OPTIONS.length];
+          setSortValue(next.value);
+        }}>
+          <Icon name="swap-vertical" size={15} color={COLORS.textSecondary} />
+          <Text style={selfStyles.sortBtnText}>{sortLabel}</Text>
+        </TouchableOpacity>
+
+        {hasFilter && (
+          <TouchableOpacity onPress={clearFilter}>
+            <Text style={selfStyles.clearText}>清除</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* 展开的筛选面板 */}
+      {filterOpen && (
+        <View style={selfStyles.filterPanel}>
+          <Text style={selfStyles.filterLabel}>按分类</Text>
+          <View style={selfStyles.pillsWrap}>
+            {categories.map(cat => (
+              <TouchableOpacity
+                key={cat.id}
+                style={[selfStyles.pill, selectedCats.includes(cat.id) && selfStyles.pillActive]}
+                onPress={() => toggleCat(cat.id)}
+              >
+                <Text style={[selfStyles.pillText, selectedCats.includes(cat.id) && selfStyles.pillTextActive]}>
+                  {cat.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <Text style={selfStyles.filterLabel}>按季节</Text>
+          <View style={selfStyles.pillsWrap}>
+            {SEASONS.map(s => (
+              <TouchableOpacity
+                key={s}
+                style={[selfStyles.pill, selectedSeasons.includes(s) && selfStyles.pillActive]}
+                onPress={() => toggleSeason(s)}
+              >
+                <Text style={[selfStyles.pillText, selectedSeasons.includes(s) && selfStyles.pillTextActive]}>
+                  {s}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {/* 结果统计 */}
+      <View style={selfStyles.resultBar}>
+        <Text style={selfStyles.resultText}>共 {filtered.length} 件</Text>
+      </View>
+
+      {/* 单列列表 */}
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {filtered.map(item => (
+          <TouchableOpacity
+            key={item.id}
+            style={selfStyles.card}
+            activeOpacity={0.85}
+            onPress={() => onItem(item.id)}
+          >
+            <Image source={{ uri: item.images[0] }} style={selfStyles.cardImg} />
+            <View style={selfStyles.cardInfo}>
+              <Text style={selfStyles.cardName} numberOfLines={1}>{item.name}</Text>
+              {item.brand && <Text style={selfStyles.cardBrand}>{item.brand}</Text>}
+              <View style={selfStyles.cardMeta}>
+                {item.price > 0 && <Text style={selfStyles.cardPrice}>¥{item.price}</Text>}
+                {item.seasons.map(s => (
+                  <View key={s} style={selfStyles.seasonTag}>
+                    <Text style={selfStyles.seasonTagText}>{s}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+            <Icon name="chevron-forward" size={18} color={COLORS.textSecondary} />
+          </TouchableOpacity>
+        ))}
+        {filtered.length === 0 && (
+          <View style={selfStyles.empty}>
+            <Icon name="search-outline" size={40} color="rgba(0,0,0,0.15)" />
+            <Text style={selfStyles.emptyText}>没有符合条件的衣物</Text>
+          </View>
+        )}
+      </ScrollView>
+    </View>
+  );
+};
+
+// ============================================================
+//  HomeScreen
+// ============================================================
 const HomeScreen = () => {
   const insets = useSafeAreaInsets();
   const nav = useNavigation<NavProp>();
   const { clothingItems, categories } = useStore();
   const [searchVisible, setSearchVisible] = useState(false);
+  const [isSelfMode, setIsSelfMode] = useState(false);
 
   const groups = useMemo(() =>
     categories.map(cat => ({
@@ -148,43 +310,61 @@ const HomeScreen = () => {
   return (
     <GradientBackground>
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* 顶部导航 — 玻璃底，低透明度 */}
+      {/* 顶部导航 */}
       <View style={[styles.topNav, { paddingTop: insets.top + SPACING.sm }]}>
         <TouchableOpacity activeOpacity={0.75} onPress={() => setSearchVisible(true)} style={styles.topNavBtn}>
           <Icon name="search" size={20} color={COLORS.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.topNavTitle}>我的衣橱</Text>
+        {/* 模式切换 */}
+        <TouchableOpacity
+          activeOpacity={0.75}
+          onPress={() => setIsSelfMode(v => !v)}
+          style={[styles.modeBtn, isSelfMode && styles.modeBtnActive]}
+        >
+          <Icon name={isSelfMode ? 'grid' : 'list'} size={20} color={isSelfMode ? '#fff' : COLORS.textPrimary} />
+        </TouchableOpacity>
         <TouchableOpacity activeOpacity={0.75} onPress={() => nav.navigate('CategoryManage')} style={styles.topNavBtn}>
           <Icon name="create-outline" size={20} color={COLORS.textPrimary} />
         </TouchableOpacity>
       </View>
 
-      {/* 分类列表 */}
-      <ScrollView
-        style={styles.mainScroll}
-        contentContainerStyle={[styles.mainContent, { paddingBottom: insets.bottom + 90 }]}
-        showsVerticalScrollIndicator={false}
-      >
-        {groups.map(g => (
-          <LiquidGlassCard key={g.id} style={styles.catGlassCard} intensity="light">
-            <CategorySection
-              name={g.name}
-              items={g.items}
-              onItemPress={id => nav.navigate('ClothingDetail', { itemId: id })}
-              onAdd={() => nav.navigate('AddClothing')}
-            />
-          </LiquidGlassCard>
-        ))}
-        {groups.length === 0 && (
-          <View style={styles.emptyContainer}>
-            <Icon name="shirt-outline" size={48} color="rgba(0,0,0,0.2)" />
-            <Text style={styles.emptyText}>暂无分类</Text>
-            <TouchableOpacity onPress={() => nav.navigate('CategoryManage')}>
-              <Text style={styles.emptyAction}>去添加</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </ScrollView>
+      {isSelfMode ? (
+        /* 自主模式 */
+        <SelfServiceMode
+          items={clothingItems}
+          categories={categories}
+          onItem={id => nav.navigate('ClothingDetail', { itemId: id })}
+          onAdd={() => nav.navigate('AddClothing')}
+        />
+      ) : (
+        /* 默认模式（分品类展示） */
+        <ScrollView
+          style={styles.mainScroll}
+          contentContainerStyle={[styles.mainContent, { paddingBottom: insets.bottom + 90 }]}
+          showsVerticalScrollIndicator={false}
+        >
+          {groups.map(g => (
+            <LiquidGlassCard key={g.id} style={styles.catGlassCard} intensity="light">
+              <CategorySection
+                name={g.name}
+                items={g.items}
+                onItemPress={id => nav.navigate('ClothingDetail', { itemId: id })}
+                onAdd={() => nav.navigate('AddClothing')}
+              />
+            </LiquidGlassCard>
+          ))}
+          {groups.length === 0 && (
+            <View style={styles.emptyContainer}>
+              <Icon name="shirt-outline" size={48} color="rgba(0,0,0,0.2)" />
+              <Text style={styles.emptyText}>暂无分类</Text>
+              <TouchableOpacity onPress={() => nav.navigate('CategoryManage')}>
+                <Text style={styles.emptyAction}>去添加</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </ScrollView>
+      )}
 
       {/* FAB */}
       <FAB
@@ -202,6 +382,70 @@ const HomeScreen = () => {
     </GradientBackground>
   );
 };
+
+// ============================================================
+//  SelfServiceMode Styles
+// ============================================================
+const selfStyles = StyleSheet.create({
+  container: { flex: 1 },
+  filterBar: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: SPACING.lg, paddingVertical: SPACING.sm,
+    gap: SPACING.sm,
+    borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.06)',
+  },
+  filterBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: SPACING.md, paddingVertical: SPACING.xs,
+    borderRadius: BORDER_RADIUS.full,
+    backgroundColor: 'rgba(0,0,0,0.07)',
+  },
+  filterBtnActive: { backgroundColor: 'rgba(162,189,234,0.2)' },
+  filterBtnText: { fontSize: FONT_SIZES.sm, fontWeight: '600', color: COLORS.textSecondary },
+  filterBtnTextActive: { color: COLORS.primary },
+  sortBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: SPACING.md, paddingVertical: SPACING.xs,
+    borderRadius: BORDER_RADIUS.full,
+    backgroundColor: 'rgba(0,0,0,0.07)',
+  },
+  sortBtnText: { fontSize: FONT_SIZES.sm, fontWeight: '600', color: COLORS.textSecondary },
+  clearText: { fontSize: FONT_SIZES.sm, fontWeight: '600', color: COLORS.primary },
+  filterPanel: {
+    padding: SPACING.lg, backgroundColor: 'rgba(255,255,255,0.92)',
+    borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.06)',
+    gap: SPACING.sm,
+  },
+  filterLabel: { fontSize: FONT_SIZES.sm, fontWeight: '700', color: COLORS.textSecondary, marginTop: SPACING.sm },
+  pillsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm, marginTop: 4 },
+  pill: {
+    paddingHorizontal: SPACING.md, paddingVertical: SPACING.xs + 2,
+    borderRadius: BORDER_RADIUS.full,
+    backgroundColor: 'rgba(0,0,0,0.07)',
+  },
+  pillActive: { backgroundColor: 'rgba(162,189,234,0.25)', borderWidth: 1, borderColor: COLORS.primary },
+  pillText: { fontSize: FONT_SIZES.sm, fontWeight: '600', color: COLORS.textSecondary },
+  pillTextActive: { color: COLORS.primary },
+  resultBar: { paddingHorizontal: SPACING.lg, paddingVertical: SPACING.xs },
+  resultText: { fontSize: FONT_SIZES.xs, color: COLORS.textSecondary, fontWeight: '600' },
+  card: {
+    flexDirection: 'row', alignItems: 'center',
+    marginHorizontal: SPACING.lg, marginBottom: SPACING.sm,
+    padding: SPACING.md,
+    backgroundColor: 'rgba(255,255,255,0.88)',
+    borderRadius: BORDER_RADIUS.lg, gap: SPACING.md,
+  },
+  cardImg: { width: 56, height: 56, borderRadius: BORDER_RADIUS.md },
+  cardInfo: { flex: 1 },
+  cardName: { fontSize: FONT_SIZES.md, fontWeight: '700', color: COLORS.textPrimary },
+  cardBrand: { fontSize: FONT_SIZES.xs, color: COLORS.textSecondary, marginTop: 2 },
+  cardMeta: { flexDirection: 'row', alignItems: 'center', gap: SPACING.xs, marginTop: 4 },
+  cardPrice: { fontSize: FONT_SIZES.sm, fontWeight: '700', color: COLORS.primary },
+  seasonTag: { backgroundColor: 'rgba(0,0,0,0.06)', borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1 },
+  seasonTagText: { fontSize: FONT_SIZES.xs, color: COLORS.textSecondary },
+  empty: { alignItems: 'center', paddingTop: 80, gap: SPACING.sm },
+  emptyText: { fontSize: FONT_SIZES.sm, color: 'rgba(0,0,0,0.25)' },
+});
 
 // ============================================================
 //  Styles
@@ -224,6 +468,14 @@ const styles = StyleSheet.create({
   topNavBtn: {
     width: 34, height: 34, borderRadius: BORDER_RADIUS.md,
     justifyContent: 'center', alignItems: 'center',
+  },
+  modeBtn: {
+    width: 34, height: 34, borderRadius: BORDER_RADIUS.md,
+    justifyContent: 'center', alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.07)',
+  },
+  modeBtnActive: {
+    backgroundColor: COLORS.primary,
   },
 
   mainScroll: { flex: 1 },
