@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { Ionicons as Icon } from '@expo/vector-icons';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
 import { GlassCard, GlassPill } from '../components/glass/GlassComponents';
@@ -24,7 +24,7 @@ const StatCard = ({
 }) => (
   <View style={statsStyles.statCard}>
     <View style={[statsStyles.statIconBg, { backgroundColor: color + '18' }]}>
-      <Icon name={icon} size={20} color={color} />
+      <Icon name={icon as any} size={20} color={color} />
     </View>
     <Text style={[statsStyles.statVal, { color }]}>{v}</Text>
     <Text style={statsStyles.statLbl}>{l}</Text>
@@ -142,7 +142,7 @@ const StatsScreen = () => {
 };
 
 const statsStyles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.card },
+  container: { flex: 1, backgroundColor: COLORS.background },
   topNav: {
     paddingHorizontal: SPACING.xl, paddingVertical: SPACING.sm,
     backgroundColor: 'rgba(255,255,255,0.85)',

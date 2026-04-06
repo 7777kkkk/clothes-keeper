@@ -59,6 +59,24 @@ export interface Occasion {
   order: number;
 }
 
+// 自定义属性模板（全局属性名定义）
+export type AttributeFieldType = 'text' | 'number' | 'select' | 'multi_select' | 'date' | 'checkbox' | 'images';
+
+export interface AttributeOption {
+  id: string;
+  label: string;      // 显示名称
+}
+
+export interface AttributeTemplate {
+  id: string;
+  name: string;        // 属性显示名，如"颜色"
+  fieldType: AttributeFieldType;  // 字段类型
+  options: AttributeOption[];      // select/multi_select 的选项列表
+  order: number;
+  visible: boolean;    // 是否在添加衣服时显示
+  isSystem: boolean;   // 是否系统内置字段（不可删除）
+}
+
 // 日历记录
 export interface CalendarRecord {
   id: string;
@@ -85,4 +103,6 @@ export type RootStackParamList = {
   CreateOutfit: { outfitId?: string };
   CategoryManage: undefined;
   OccasionManage: undefined;
+  LiquidGlassDemo: undefined;
+  AttributeManage: undefined;
 };

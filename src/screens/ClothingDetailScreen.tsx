@@ -29,7 +29,11 @@ const ClothingDetailScreen = () => {
   const route = useRoute<RouteProps>();
   const navigation = useNavigation();
   const { itemId } = route.params;
-  const { clothingItems, categories, updateClothingItem, deleteClothingItem } = useStore();
+  const { clothingItems, categories, updateClothingItem, deleteClothingItem, attributeTemplates = [] } = useStore();
+
+  // 只显示 visible=true 的字段
+  const visibleTemplates = attributeTemplates.filter(t => t.visible !== false);
+  const visibleIds = new Set(visibleTemplates.map(t => t.id));
 
   const item = clothingItems.find(c => c.id === itemId);
   if (!item) {
@@ -570,10 +574,12 @@ const ClothingDetailScreen = () => {
       <View style={styles.section}>
         <Text style={styles.name}>{item.name}</Text>
         <View style={styles.tagRow}>
-          <View style={styles.tag}>
-            <Text style={styles.tagText}>{category?.name || '未分类'}</Text>
-          </View>
-          {item.seasons.map(s => (
+          {visibleIds.has('sys_category') && (
+            <View style={styles.tag}>
+              <Text style={styles.tagText}>{category?.name || '未分类'}</Text>
+            </View>
+          )}
+          {visibleIds.has('sys_seasons') && item.seasons.map(s => (
             <View key={s} style={styles.tag}>
               <Text style={styles.tagText}>{s}</Text>
             </View>
@@ -581,49 +587,60 @@ const ClothingDetailScreen = () => {
         </View>
       </View>
 
-      {/* 详细信息 */}
+      {/* 详细信息 — 根据 visible 过滤 */}
       <View style={styles.section}>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>📍 存放位置</Text>
-          <Text style={styles.infoValue}>{getLocationText()}</Text>
-        </View>
-        {item.brand && (
+        {visibleIds.has('sys_location') && (
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>📍 存放位置</Text>
+            <Text style={styles.infoValue}>{getLocationText()}</Text>
+          </View>
+        )}
+        {visibleIds.has('sys_brand') && item.brand && (
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>🏷️ 品牌</Text>
             <Text style={styles.infoValue}>{item.brand}</Text>
           </View>
         )}
-        {item.price > 0 && (
+        {visibleIds.has('sys_price') && item.price > 0 && (
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>💰 价格</Text>
             <Text style={styles.infoValue}>¥{item.price.toFixed(2)}</Text>
           </View>
         )}
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>🗓️ 购买日期</Text>
-          <Text style={styles.infoValue}>{formatPurchaseDate()}</Text>
-        </View>
+        {visibleIds.has('sys_purchase_date') && (
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>🗓️ 购买日期</Text>
+            <Text style={styles.infoValue}>{formatPurchaseDate()}</Text>
+          </View>
+        )}
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>👕 穿搭次数</Text>
           <Text style={styles.infoValue}>{item.wearCount || 0} 次</Text>
         </View>
       </View>
 
-      {/* 自定义属性 */}
-      {item.customAttributes && item.customAttributes.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>✨ 自定义属性</Text>
-          {item.customAttributes.map(attr => (
-            <View key={attr.id} style={styles.infoRow}>
-              <Text style={styles.infoLabel}>{attr.name}</Text>
-              <Text style={styles.infoValue}>{attr.value}</Text>
-            </View>
-          ))}
-        </View>
-      )}
+      {/* 自定义属性 — 根据 visible 过滤 */}
+      {(() => {
+        const visibleCustomAttrs = (item.customAttributes || []).filter(attr => {
+          const tpl = attributeTemplates.find(t => t.name === attr.name);
+          return tpl && tpl.visible;
+        });
+        if (visibleCustomAttrs.length === 0) return null;
+        return (
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>✨ 自定义属性</Text>
+            {visibleCustomAttrs.map(attr => (
+              <View key={attr.id} style={styles.infoRow}>
+                <Text style={styles.infoLabel}>{attr.name}</Text>
+                <Text style={styles.infoValue}>{attr.value}</Text>
+              </View>
+            ))}
+          </View>
+        );
+      })()}
 
-      {/* 备注 */}
-      {item.notes && (
+      {/* 备注 — 根据 visible 过滤 */}
+      {visibleIds.has('sys_notes') && item.notes && (
         <View style={styles.section}>
           <Text style={styles.infoLabel}>📝 备注</Text>
           <Text style={styles.notes}>{item.notes}</Text>
@@ -654,7 +671,7 @@ const ClothingDetailScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.card,
+    backgroundColor: COLORS.background,
   },
   notFound: {
     flex: 1,
@@ -714,7 +731,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs,
     borderRadius: BORDER_RADIUS.full,
-    backgroundColor: COLORS.card,
+    backgroundColor: COLORS.background,
   },
   tagText: {
     fontSize: FONT_SIZES.sm,
@@ -837,7 +854,7 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
   },
   input: {
-    backgroundColor: COLORS.card,
+    backgroundColor: COLORS.background,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.md,
     borderRadius: BORDER_RADIUS.sm,
@@ -860,7 +877,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
     borderRadius: BORDER_RADIUS.full,
-    backgroundColor: COLORS.card,
+    backgroundColor: COLORS.background,
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.12)',
   },
@@ -903,7 +920,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: COLORS.card,
+    backgroundColor: COLORS.background,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.md,
     borderRadius: BORDER_RADIUS.sm,
@@ -923,7 +940,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: COLORS.card,
+    backgroundColor: COLORS.background,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
     borderRadius: BORDER_RADIUS.sm,
@@ -979,7 +996,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelBtn: {
-    backgroundColor: COLORS.card,
+    backgroundColor: COLORS.background,
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.12)',
   },
@@ -1050,7 +1067,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
   },
   attrInput: {
-    backgroundColor: COLORS.card,
+    backgroundColor: COLORS.background,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.md,
     borderRadius: BORDER_RADIUS.sm,
@@ -1068,7 +1085,7 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.md,
     borderRadius: BORDER_RADIUS.sm,
     alignItems: 'center',
-    backgroundColor: COLORS.card,
+    backgroundColor: COLORS.background,
   },
   modalConfirmBtn: {
     backgroundColor: COLORS.primary,

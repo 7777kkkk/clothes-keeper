@@ -7,7 +7,7 @@ import {
   View, Text, StyleSheet, FlatList, TouchableOpacity, Image,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { Ionicons as Icon } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
@@ -51,7 +51,7 @@ const OutfitScreen = () => {
           ))}
           {items.length === 0 && (
             <View style={[outfitStyles.thumb, { backgroundColor: 'rgba(255,255,255,0.65)' }]}>
-              <Icon name="hanger" size={20} color={'rgba(0,0,0,0.35)'} />
+              <Icon name="shirt-outline" size={20} color={'rgba(0,0,0,0.35)'} />
             </View>
           )}
         </View>
@@ -80,7 +80,7 @@ const OutfitScreen = () => {
           onPress={() => nav.navigate('CreateOutfit', {})}
           style={outfitStyles.addBtn}
         >
-          <Icon name="plus" size={20} color={COLORS.primary} />
+          <Icon name="add" size={20} color={COLORS.primary} />
         </TouchableOpacity>
       </View>
 
@@ -111,7 +111,7 @@ const OutfitScreen = () => {
         contentContainerStyle={[outfitStyles.listContent, { paddingBottom: insets.bottom + 90 }]}
         ListEmptyComponent={
           <EmptyState
-            icon="body-outline"
+            icon="layers-outline"
             title="还没有搭配"
             subtitle="创建第一个穿搭方案"
             actionLabel="新建搭配"
@@ -122,8 +122,8 @@ const OutfitScreen = () => {
 
       {/* FAB */}
       <FAB
-        icon="plus" onPress={() => nav.navigate('CreateOutfit', {})}
-        style={{ bottom: insets.bottom + 84 }}
+        icon="add" onPress={() => nav.navigate('CreateOutfit', {})}
+        style={{ position: 'absolute', right: 20, bottom: insets.bottom + 84 }}
       />
         </SafeAreaView>
     </GradientBackground>
@@ -131,7 +131,7 @@ const OutfitScreen = () => {
 };
 
 const outfitStyles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.card },
+  container: { flex: 1, backgroundColor: COLORS.background },
   topNav: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: SPACING.xl, paddingVertical: SPACING.sm,

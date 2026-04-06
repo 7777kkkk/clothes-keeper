@@ -10,34 +10,34 @@ export const GRADIENT_COLORS = ['#dbeaff', '#d8f2fc', '#e1f8f6', '#f0fcf3', '#fe
 //  COLORS
 // ============================================================
 export const COLORS = {
-  // ---- 强制背景（渐变用） ----
-  background: '#dbeaff',
+  // ---- 强制背景（纯白） ----
+  background: '#FBFAFF',
 
-  // ---- 强制卡片（半透明白色） ----
-  card: 'rgba(255,255,255,0.85)',
+  // ---- 强制卡片 ----
+  card: 'rgba(255,255,255,0.92)',
 
   // ---- 强制主文字 / 辅助文字 ----
-  textPrimary: '#FFFFFF',
-  textSecondary: '#CCE1FF',
+  textPrimary: '#43655a',
+  textSecondary: '#889fa5',
 
   // ---- Tab Bar ----
-  tabBar: 'rgba(255,255,255,0.92)',
+  tabBar: 'rgba(255,255,255,0.96)',
 
-  // ---- 悬浮按钮（固定右下角） ----
-  fab: '#A2BDEA',
+  // ---- 悬浮按钮 ----
+  fab: '#628281',
 
   // ---- 强调色 ----
-  primary: '#4A90D9',
-  accent: '#5AC8FA',
+  primary: '#628281',
+  accent: '#43655a',
 
   // ---- 兼容别名 ----
-  glass: 'rgba(255,255,255,0.85)',
-  glassLight: 'rgba(255,255,255,0.65)',
-  glassBorder: 'rgba(255,255,255,0.3)',
+  glass: 'rgba(255,255,255,0.92)',
+  glassLight: 'rgba(255,255,255,0.80)',
+  glassBorder: 'rgba(255,255,255,0.55)',
   secondary: 'rgba(255,255,255,0.60)',
 
   // ---- 状态 ----
-  error: '#FF6B6B',
+  error: '#e05c5c',
   success: '#4CAF50',
   warning: '#FFB74D',
 };

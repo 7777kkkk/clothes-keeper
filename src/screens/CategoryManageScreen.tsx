@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   addSection: {
     flexDirection: 'row',
     padding: SPACING.lg,
-    backgroundColor: COLORS.card,
+    backgroundColor: COLORS.background,
     gap: SPACING.md,
     ...SHADOWS.card,
   },
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: COLORS.card,
+    backgroundColor: COLORS.background,
     padding: SPACING.lg,
     borderRadius: BORDER_RADIUS.lg,
     marginBottom: SPACING.sm,

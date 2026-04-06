@@ -186,7 +186,7 @@ const CreateOutfitScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.card,
+    backgroundColor: COLORS.background,
   },
   section: {
     padding: SPACING.lg,
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   input: {
-    backgroundColor: COLORS.card,
+    backgroundColor: COLORS.background,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.md,
     borderRadius: BORDER_RADIUS.sm,
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
     borderRadius: BORDER_RADIUS.full,
-    backgroundColor: COLORS.card,
+    backgroundColor: COLORS.background,
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.12)',
   },

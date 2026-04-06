@@ -1,11 +1,10 @@
 /**
- * GradientBackground — 全局渐变背景组件
- * 所有页面根容器使用此组件替代 View
+ * GradientBackground — 全局背景组件
+ * 全局背景色
  */
 import React from 'react';
-import { StyleSheet, ViewStyle } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
-import { GRADIENT_COLORS } from '../../constants/theme';
+import { View, StyleSheet, ViewStyle } from 'react-native';
+import { COLORS } from '../../constants/theme';
 
 interface Props {
   children: React.ReactNode;
@@ -13,18 +12,14 @@ interface Props {
 }
 
 export const GradientBackground = ({ children, style }: Props) => (
-  <LinearGradient
-    colors={GRADIENT_COLORS}
-    start={{ x: 0, y: 0 }}
-    end={{ x: 1, y: 1 }}
-    style={[styles.gradient, style]}
-  >
+  <View style={[styles.bg, style]}>
     {children}
-  </LinearGradient>
+  </View>
 );
 
 const styles = StyleSheet.create({
-  gradient: {
+  bg: {
     flex: 1,
+    backgroundColor: COLORS.background,
   },
 });

@@ -7,13 +7,14 @@ import {
   Image, Modal, TextInput,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { Ionicons as Icon } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
 import { RootStackParamList, ClothingItem } from '../types';
 import { GlassCard, GlassPill, FAB, SectionHeader, EmptyState } from '../components/glass/GlassComponents';
+import { LiquidGlassCard } from '../components/glass/LiquidGlassCard';
 import { GradientBackground } from '../components/glass/GradientBackground';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
@@ -63,16 +64,13 @@ const CategorySection = ({
       </View>
     </View>
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.thumbsRow}>
-      {items.length === 0 ? (
-        <TouchableOpacity activeOpacity={0.75} onPress={onAdd} style={styles.emptyThumb}>
-          <Icon name="add" size={22} color="rgba(0,0,0,0.3)" />
-          <Text style={styles.emptyThumbText}>添加</Text>
-        </TouchableOpacity>
-      ) : (
-        items.map(item => (
-          <ItemCard key={item.id} item={item} onPress={() => onItemPress(item.id)} />
-        ))
-      )}
+      {items.map(item => (
+        <ItemCard key={item.id} item={item} onPress={() => onItemPress(item.id)} />
+      ))}
+      <TouchableOpacity activeOpacity={0.75} onPress={onAdd} style={styles.addThumb}>
+        <Icon name="add" size={20} color="rgba(0,0,0,0.3)" />
+        <Text style={styles.addThumbText}>添加</Text>
+      </TouchableOpacity>
     </ScrollView>
   </View>
 );
@@ -150,31 +148,15 @@ const HomeScreen = () => {
   return (
     <GradientBackground>
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* 顶部导航 */}
+      {/* 顶部导航 — 玻璃底，低透明度 */}
       <View style={[styles.topNav, { paddingTop: insets.top + SPACING.sm }]}>
         <TouchableOpacity activeOpacity={0.75} onPress={() => setSearchVisible(true)} style={styles.topNavBtn}>
-          <Icon name="search" size={22} color={COLORS.textPrimary} />
+          <Icon name="search" size={20} color={COLORS.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.topNavTitle}>我的衣橱</Text>
         <TouchableOpacity activeOpacity={0.75} onPress={() => nav.navigate('CategoryManage')} style={styles.topNavBtn}>
-          <Icon name="create-outline" size={22} color={COLORS.textPrimary} />
+          <Icon name="create-outline" size={20} color={COLORS.textPrimary} />
         </TouchableOpacity>
-      </View>
-
-      {/* 概览统计 */}
-      <View style={styles.overviewRow}>
-        {[
-          { n: clothingItems.length, l: '单品', c: COLORS.primary },
-          { n: categories.length, l: '分类', c: COLORS.accent },
-          { n: clothingItems.reduce((s, i) => s + (i.price || 0), 0), l: '总价值', c: '#888' },
-        ].map((item, i) => (
-          <View key={i} style={styles.overviewCard}>
-            <Text style={[styles.overviewNum, { color: COLORS.textPrimary }]}>
-              {typeof item.n === 'number' && item.n > 1000 ? `¥${item.n}` : item.n}
-            </Text>
-            <Text style={styles.overviewLbl}>{item.l}</Text>
-          </View>
-        ))}
       </View>
 
       {/* 分类列表 */}
@@ -184,13 +166,14 @@ const HomeScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         {groups.map(g => (
-          <CategorySection
-            key={g.id}
-            name={g.name}
-            items={g.items}
-            onItemPress={id => nav.navigate('ClothingDetail', { itemId: id })}
-            onAdd={() => nav.navigate('AddClothing')}
-          />
+          <LiquidGlassCard key={g.id} style={styles.catGlassCard} intensity="light">
+            <CategorySection
+              name={g.name}
+              items={g.items}
+              onItemPress={id => nav.navigate('ClothingDetail', { itemId: id })}
+              onAdd={() => nav.navigate('AddClothing')}
+            />
+          </LiquidGlassCard>
         ))}
         {groups.length === 0 && (
           <View style={styles.emptyContainer}>
@@ -228,43 +211,32 @@ const styles = StyleSheet.create({
 
   topNav: {
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: SPACING.xl, paddingBottom: SPACING.sm,
-    backgroundColor: 'rgba(255,255,255,0.75)',
-    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.5)',
+    paddingHorizontal: SPACING.lg, paddingBottom: SPACING.sm,
+    backgroundColor: 'rgba(255,255,255,0.60)',
+    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.4)',
     gap: SPACING.md,
   },
   topNavTitle: {
     flex: 1, textAlign: 'center',
-    fontSize: FONT_SIZES.xxl, fontWeight: '800',
+    fontSize: FONT_SIZES.lg, fontWeight: '800',
     color: COLORS.textPrimary,
   },
   topNavBtn: {
-    width: 38, height: 38, borderRadius: BORDER_RADIUS.md,
+    width: 34, height: 34, borderRadius: BORDER_RADIUS.md,
     justifyContent: 'center', alignItems: 'center',
   },
-
-  overviewRow: {
-    flexDirection: 'row', padding: SPACING.lg, gap: SPACING.sm,
-  },
-  overviewCard: {
-    flex: 1, alignItems: 'center', paddingVertical: SPACING.md,
-    backgroundColor: COLORS.card,
-    borderRadius: BORDER_RADIUS.lg,
-    ...SHADOWS.card,
-  },
-  overviewNum: { fontSize: FONT_SIZES.xl, fontWeight: '800' },
-  overviewLbl: { fontSize: FONT_SIZES.xs, color: COLORS.textSecondary, marginTop: 2, fontWeight: '500' },
 
   mainScroll: { flex: 1 },
   mainContent: { paddingTop: SPACING.sm },
 
-  catSection: { marginBottom: SPACING.xxl },
+  catGlassCard: { marginBottom: SPACING.lg, padding: SPACING.lg, borderRadius: BORDER_RADIUS.lg },
+  catSection: { marginBottom: 0 },
   catHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: SPACING.xl, marginBottom: SPACING.md,
+    marginBottom: SPACING.sm,
   },
   catTitleRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
-  catTitle: { fontSize: FONT_SIZES.lg, fontWeight: '700', color: COLORS.textPrimary },
+  catTitle: { fontSize: FONT_SIZES.md, fontWeight: '700', color: COLORS.textPrimary },
   countBadge: {
     backgroundColor: 'rgba(0,0,0,0.08)', borderRadius: BORDER_RADIUS.full,
     paddingHorizontal: SPACING.sm, paddingVertical: 1,
@@ -272,15 +244,15 @@ const styles = StyleSheet.create({
   countText: { fontSize: FONT_SIZES.xs, color: 'rgba(0,0,0,0.5)', fontWeight: '600' },
   catActions: { flexDirection: 'row', gap: SPACING.xs },
   iconBtn: {
-    width: 32, height: 32, borderRadius: BORDER_RADIUS.sm,
+    width: 28, height: 28, borderRadius: BORDER_RADIUS.sm,
     backgroundColor: 'rgba(0,0,0,0.06)',
     justifyContent: 'center', alignItems: 'center',
   },
 
-  thumbsRow: { paddingHorizontal: SPACING.xl, gap: SPACING.sm },
+  thumbsRow: { gap: SPACING.sm, paddingVertical: 2 },
   thumbCard: {
-    width: 80, height: 104,
-    borderRadius: BORDER_RADIUS.lg,
+    width: 65, height: 85,
+    borderRadius: BORDER_RADIUS.md,
     overflow: 'hidden',
     backgroundColor: 'rgba(255,255,255,0.7)',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.5)',
@@ -299,12 +271,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5, paddingVertical: 1,
   },
   wearText: { fontSize: 9, color: COLORS.primary, fontWeight: '700' },
-  emptyThumb: {
-    width: 80, height: 104, borderRadius: BORDER_RADIUS.lg,
+  addThumb: {
+    width: 65, height: 85, borderRadius: BORDER_RADIUS.md,
     borderWidth: 2, borderColor: 'rgba(0,0,0,0.15)', borderStyle: 'dashed',
     justifyContent: 'center', alignItems: 'center', gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.5)',
   },
-  emptyThumbText: { fontSize: FONT_SIZES.xs, color: 'rgba(0,0,0,0.35)' },
+  addThumbText: { fontSize: FONT_SIZES.xs, color: 'rgba(0,0,0,0.35)' },
 
   emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 80 },
   emptyText: { fontSize: FONT_SIZES.lg, color: 'rgba(0,0,0,0.35)', marginTop: 12 },

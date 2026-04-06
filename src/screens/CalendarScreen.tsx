@@ -7,7 +7,7 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Image,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { Ionicons as Icon } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
@@ -66,18 +66,16 @@ const CalendarGrid = ({
         {cells.map((c, idx) => {
           if (!c.d) return <View key={`e${idx}`} style={calStyles.dayCell} />;
           return (
-            <TouchableOpacity key={c.dateStr} activeOpacity={0.7} onPress={() => onSelect(c.dateStr)} style={calStyles.dayCell}>
-              <View style={[
-                calStyles.dayInner,
-                c.isSelected && calStyles.dayInnerSelected,
-                c.isToday && !c.isSelected && calStyles.dayInnerToday,
-              ]}>
-                <Text style={[
-                  calStyles.dayText,
-                  c.isSelected && calStyles.dayTextSelected,
-                  c.isToday && !c.isSelected && { color: COLORS.primary, fontWeight: '700' },
-                ]}>{c.d}</Text>
-              </View>
+            <TouchableOpacity key={c.dateStr} activeOpacity={0.7} onPress={() => onSelect(c.dateStr)} style={[
+              calStyles.dayCell,
+              c.isSelected && calStyles.dayCellSelected,
+              c.isToday && !c.isSelected && calStyles.dayCellToday,
+            ]}>
+              <Text style={[
+                calStyles.dayText,
+                c.isSelected && calStyles.dayTextSelected,
+                c.isToday && !c.isSelected && { color: COLORS.primary, fontWeight: '700' },
+              ]}>{c.d}</Text>
               {c.hasRecord && !c.isSelected && <View style={calStyles.recordDot} />}
             </TouchableOpacity>
           );
@@ -102,11 +100,11 @@ const OutfitDetailCard = ({
     return (
       <GlassCard style={calStyles.detailCard}>
         <View style={calStyles.detailEmpty}>
-          <Icon name="hanger" size={36} color={'rgba(0,0,0,0.35)'} />
+          <Icon name="shirt-outline" size={36} color={'rgba(0,0,0,0.35)'} />
           <Text style={calStyles.detailEmptyTitle}>暂无穿搭记录</Text>
           <Text style={calStyles.detailEmptySub}>添加今日穿搭</Text>
           <TouchableOpacity style={calStyles.addBtn} onPress={onAdd}>
-            <Icon name="plus" size={16} color="#fff" />
+            <Icon name="add" size={16} color="#fff" />
             <Text style={calStyles.addBtnText}>添加穿搭</Text>
           </TouchableOpacity>
         </View>
@@ -194,13 +192,13 @@ const CalendarScreen = () => {
       {/* Top Nav */}
       <View style={calStyles.topNav}>
         <TouchableOpacity activeOpacity={0.75} onPress={prevMonth} style={calStyles.navBtn}>
-          <Icon name="chevron-left" size={22} color={COLORS.textPrimary} />
+          <Icon name="chevron-back" size={22} color={COLORS.textPrimary} />
         </TouchableOpacity>
         <TouchableOpacity activeOpacity={0.75} onPress={goToday}>
           <Text style={calStyles.monthTitle}>{year}年 {MONTHS[month]}</Text>
         </TouchableOpacity>
         <TouchableOpacity activeOpacity={0.75} onPress={nextMonth} style={calStyles.navBtn}>
-          <Icon name="chevron-right" size={22} color={COLORS.textPrimary} />
+          <Icon name="chevron-forward" size={22} color={COLORS.textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -244,7 +242,7 @@ const CalendarScreen = () => {
                     <Text style={calStyles.historyDate}>{r.date}</Text>
                     <Text style={calStyles.historyCount}>{r.itemIds?.length || 0} 件单品</Text>
                   </View>
-                  {r.date === selected && <Icon name="check-circle" size={18} color={COLORS.primary} />}
+                  {r.date === selected && <Icon name="checkmark-circle" size={18} color={COLORS.primary} />}
                 </View>
               </GlassCard>
             ))}
@@ -254,8 +252,8 @@ const CalendarScreen = () => {
 
       {/* FAB */}
       <FAB
-        icon="plus" onPress={() => nav.navigate('CreateOutfit', {})}
-        style={{ bottom: insets.bottom + 84 }}
+        icon="add" onPress={() => nav.navigate('CreateOutfit', {})}
+        style={{ position: 'absolute', right: 20, bottom: insets.bottom + 84 }}
       />
         </SafeAreaView>
     </GradientBackground>
@@ -266,7 +264,7 @@ const CalendarScreen = () => {
 //  Styles
 // ============================================================
 const calStyles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.card },
+  container: { flex: 1, backgroundColor: COLORS.background },
   topNav: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: SPACING.xl, paddingVertical: SPACING.sm,
@@ -281,25 +279,29 @@ const calStyles = StyleSheet.create({
 
   calendarCard: { padding: SPACING.lg },
   grid: {},
-  weekRow: { flexDirection: 'row', marginBottom: SPACING.sm },
+  weekRow: { flexDirection: 'row', marginBottom: SPACING.xs },
   weekCell: { flex: 1, alignItems: 'center', paddingVertical: SPACING.xs },
   weekText: { fontSize: FONT_SIZES.sm, fontWeight: '600', color: COLORS.textSecondary },
-  daysGrid: { flexDirection: 'row', flexWrap: 'wrap' },
+  daysGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
   dayCell: {
-    width: '14.28%', aspectRatio: 1,
-    alignItems: 'center', justifyContent: 'center', position: 'relative',
+    width: '13.5%',
+    aspectRatio: 1,
+    justifyContent: 'flex-start',
+    backgroundColor: 'rgba(255,255,255,0.70)',
+    borderRadius: 10,
+    position: 'relative',
+    padding: 4,
   },
-  dayInner: {
-    width: 32, height: 32, borderRadius: 16,
-    alignItems: 'center', justifyContent: 'center',
+  dayCellSelected: { backgroundColor: COLORS.primary },
+  dayCellToday: { borderWidth: 2, borderColor: COLORS.primary },
+  dayText: {
+    fontSize: FONT_SIZES.sm, fontWeight: '600', color: COLORS.textPrimary,
+    textAlign: 'left',
   },
-  dayInnerSelected: { backgroundColor: COLORS.primary },
-  dayInnerToday: { borderWidth: 2, borderColor: COLORS.primary },
-  dayText: { fontSize: FONT_SIZES.sm, fontWeight: '600', color: COLORS.textPrimary },
   dayTextSelected: { color: '#fff' },
   recordDot: {
-    position: 'absolute', bottom: 3, width: 5, height: 5,
-    borderRadius: 3, backgroundColor: COLORS.error,
+    position: 'absolute', bottom: 4, right: 4,
+    width: 5, height: 5, borderRadius: 3, backgroundColor: COLORS.error,
   },
 
   // Detail Card

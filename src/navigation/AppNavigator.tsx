@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Platform } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { Ionicons as Icon } from '@expo/vector-icons';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
 
 import HomeScreen from '../screens/HomeScreen';
@@ -16,6 +16,8 @@ import ClothingDetailScreen from '../screens/ClothingDetailScreen';
 import CreateOutfitScreen from '../screens/CreateOutfitScreen';
 import CategoryManageScreen from '../screens/CategoryManageScreen';
 import OccasionManageScreen from '../screens/OccasionManageScreen';
+import LiquidGlassDemoScreen from '../screens/LiquidGlassDemoScreen';
+import AttributeManageScreen from '../screens/AttributeManageScreen';
 import { RootTabParamList, RootStackParamList } from '../types';
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -24,7 +26,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 // Ionicons icon names for tabs
 const TAB_ICONS: Record<string, { active: string; inactive: string }> = {
   Home: { active: 'shirt', inactive: 'shirt-outline' },
-  Outfit: { active: 'body', inactive: 'body-outline' },
+  Outfit: { active: 'layers', inactive: 'layers-outline' },
   Calendar: { active: 'calendar', inactive: 'calendar-outline' },
   Stats: { active: 'stats-chart', inactive: 'stats-chart-outline' },
   My: { active: 'person', inactive: 'person-outline' },
@@ -62,7 +64,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => (
           <View key={route.key} style={tabStyles.tabItem}>
             <View style={[tabStyles.tabButton, isFocused && tabStyles.tabButtonFocused]}>
               <Icon
-                name={isFocused ? icon.active : icon.inactive}
+                name={(isFocused ? icon.active : icon.inactive) as any}
                 size={24}
                 color={isFocused ? COLORS.primary : 'rgba(0,0,0,0.35)'}
                 onPress={onPress}
@@ -107,6 +109,8 @@ const AppNavigator = () => (
       <Stack.Screen name="CreateOutfit" component={CreateOutfitScreen} options={{ title: '创建搭配' }} />
       <Stack.Screen name="CategoryManage" component={CategoryManageScreen} options={{ title: '管理品类' }} />
       <Stack.Screen name="OccasionManage" component={OccasionManageScreen} options={{ title: '管理场合' }} />
+      <Stack.Screen name="LiquidGlassDemo" component={LiquidGlassDemoScreen} options={{ title: 'Liquid Glass 演示' }} />
+      <Stack.Screen name="AttributeManage" component={AttributeManageScreen} options={{ title: '属性管理' }} />
     </Stack.Navigator>
   </NavigationContainer>
 );

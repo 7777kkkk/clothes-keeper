@@ -1,18 +1,19 @@
 /**
- * GlassComponents — 强制规范版（白色卡片 + Ionicons）
+ * GlassComponents — Liquid Glass 版（全部使用 LiquidGlass 效果）
  */
 import React from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ViewStyle,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { Ionicons as Icon } from '@expo/vector-icons';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../../constants/theme';
+import { LiquidGlassCard, LiquidGlassPill } from './LiquidGlassCard';
 
 // ============================================================
-//  GlassCard — 半透明白色卡片
+//  GlassCard — 基于 LiquidGlassCard（API 兼容）
 // ============================================================
 export const GlassCard = ({
-  children, style, padding = 'lg', onPress, activeOpacity = 0.85,
+  children, style, padding = 'lg', onPress,
 }: {
   children: React.ReactNode;
   style?: ViewStyle;
@@ -20,26 +21,24 @@ export const GlassCard = ({
   onPress?: () => void;
   activeOpacity?: number;
 }) => {
-  const cardStyle: ViewStyle = {
-    backgroundColor: COLORS.card,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.5)',
-    borderRadius: BORDER_RADIUS.lg,
-    padding: padding === 'none' ? 0 : SPACING[padding as keyof typeof SPACING],
-    ...SHADOWS.card,
-  };
+  const padStyle = padding === 'none' ? {} : { padding: SPACING[padding as keyof typeof SPACING] };
+  const combinedStyle = StyleSheet.flatten([padStyle, style]);
   if (onPress) {
     return (
-      <TouchableOpacity activeOpacity={activeOpacity} onPress={onPress} style={[cardStyle, style]}>
+      <LiquidGlassCard style={combinedStyle} intensity="light" onPress={onPress}>
         {children}
-      </TouchableOpacity>
+      </LiquidGlassCard>
     );
   }
-  return <View style={[cardStyle, style]}>{children}</View>;
+  return (
+    <LiquidGlassCard style={combinedStyle} intensity="light">
+      {children}
+    </LiquidGlassCard>
+  );
 };
 
 // ============================================================
-//  GlassPill — 胶囊标签
+//  GlassPill — 基于 LiquidGlassPill（API 兼容）
 // ============================================================
 export const GlassPill = ({
   label, active = false, icon, onPress, size = 'md',
@@ -50,22 +49,25 @@ export const GlassPill = ({
   onPress?: () => void;
   size?: 'sm' | 'md';
 }) => (
-  <TouchableOpacity activeOpacity={0.75} onPress={onPress} style={[
-    styles.pill, size === 'sm' && styles.pillSm,
-    active ? styles.pillActive : styles.pillInactive,
-  ]}>
-    {icon && (
-      <Icon
-        name={icon}
-        size={size === 'sm' ? 11 : 13}
-        color={active ? '#fff' : 'rgba(0,0,0,0.5)'}
-        style={styles.pillIcon}
-      />
-    )}
-    <Text style={[styles.pillText, size === 'sm' && styles.pillTextSm, active ? styles.pillTextActive : styles.pillTextInactive]}>
-      {label}
-    </Text>
-  </TouchableOpacity>
+  <LiquidGlassPill active={active} onPress={onPress}>
+    <View style={styles.pillInner}>
+      {icon && (
+        <Icon
+          name={icon as any}
+          size={size === 'sm' ? 11 : 13}
+          color={active ? '#fff' : 'rgba(0,0,0,0.55)'}
+          style={styles.pillIcon}
+        />
+      )}
+      <Text style={[
+        styles.pillText,
+        size === 'sm' && styles.pillTextSm,
+        { color: active ? '#fff' : 'rgba(0,0,0,0.55)' },
+      ]}>
+        {label}
+      </Text>
+    </View>
+  </LiquidGlassPill>
 );
 
 // ============================================================
@@ -86,9 +88,9 @@ export const FAB = ({
   return (
     <TouchableOpacity
       activeOpacity={0.8} onPress={onPress}
-      style={[{ width: s, height: s, borderRadius: s / 2, backgroundColor: color }, SHADOWS.fab, style as any]}
+      style={[{ width: s, height: s, borderRadius: s / 2, backgroundColor: color, justifyContent: 'center', alignItems: 'center' }, SHADOWS.fab, style as any]}
     >
-      <Icon name={icon} size={iconSizes[size]} color="#fff" />
+      <Icon name={icon as any} size={iconSizes[size]} color="#fff" />
     </TouchableOpacity>
   );
 };
@@ -126,7 +128,7 @@ export const EmptyState = ({
   onAction?: () => void;
 }) => (
   <View style={styles.emptyState}>
-    <Icon name={icon} size={52} color="rgba(0,0,0,0.2)" />
+    <Icon name={icon as any} size={52} color="rgba(0,0,0,0.15)" />
     <Text style={styles.emptyTitle}>{title}</Text>
     {subtitle && <Text style={styles.emptySubtitle}>{subtitle}</Text>}
     {actionLabel && onAction && (
@@ -150,29 +152,16 @@ export const Badge = ({ count, style }: { count: number; style?: ViewStyle }) =>
 //  Styles
 // ============================================================
 const styles = StyleSheet.create({
-  pill: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: SPACING.md, paddingVertical: SPACING.xs + 1,
-    borderRadius: BORDER_RADIUS.full, borderWidth: 1, gap: 4,
+  pillInner: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
   },
-  pillSm: {
-    paddingHorizontal: SPACING.sm, paddingVertical: SPACING.xs,
-  },
-  pillInactive: {
-    backgroundColor: 'rgba(0,0,0,0.06)', borderColor: 'rgba(0,0,0,0.12)',
-  },
-  pillActive: {
-    backgroundColor: COLORS.primary, borderColor: COLORS.primary,
-  },
+  pillIcon: { marginRight: 2 },
   pillText: { fontSize: FONT_SIZES.sm, fontWeight: '600' },
   pillTextSm: { fontSize: FONT_SIZES.xs },
-  pillTextInactive: { color: 'rgba(0,0,0,0.55)' },
-  pillTextActive: { color: '#fff' },
-  pillIcon: { marginRight: 2 },
 
   sectionHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: SPACING.xl, marginBottom: SPACING.md,
+    paddingHorizontal: SPACING.lg, marginBottom: SPACING.md,
   },
   sectionTitle: {
     fontSize: FONT_SIZES.lg, fontWeight: '700', color: COLORS.textPrimary,
@@ -183,11 +172,11 @@ const styles = StyleSheet.create({
 
   emptyState: { alignItems: 'center', paddingVertical: 60 },
   emptyTitle: {
-    fontSize: FONT_SIZES.lg, fontWeight: 'bold', color: 'rgba(0,0,0,0.4)',
+    fontSize: FONT_SIZES.lg, fontWeight: 'bold', color: 'rgba(0,0,0,0.35)',
     marginTop: SPACING.lg, marginBottom: SPACING.xs,
   },
   emptySubtitle: {
-    fontSize: FONT_SIZES.sm, color: 'rgba(0,0,0,0.3)',
+    fontSize: FONT_SIZES.sm, color: 'rgba(0,0,0,0.25)',
     marginBottom: SPACING.xl, textAlign: 'center',
   },
   emptyBtn: {
