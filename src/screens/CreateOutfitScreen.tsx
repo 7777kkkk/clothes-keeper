@@ -21,7 +21,7 @@ const CreateOutfitScreen = () => {
   const navigation = useNavigation();
   const { outfitId } = route.params || {};
 
-  const { outfits, occasions, clothingItems, addOutfit, updateOutfit, deleteOutfit } = useStore();
+  const { outfits, occasions, clothingItems, addOutfit, updateOutfit, deleteOutfit, incrementWearCount } = useStore();
   const existingOutfit = outfitId ? outfits.find(o => o.id === outfitId) : null;
 
   const [name, setName] = useState(existingOutfit?.name || '');
@@ -32,6 +32,7 @@ const CreateOutfitScreen = () => {
     existingOutfit?.itemIds || []
   );
   const [notes, setNotes] = useState(existingOutfit?.notes || '');
+  const [didIncrementCount, setDidIncrementCount] = useState(false);
 
   const isEdit = !!existingOutfit;
 
@@ -69,6 +70,8 @@ const CreateOutfitScreen = () => {
       updateOutfit(outfitId!, outfitData);
     } else {
       addOutfit(outfitData);
+      // 新增搭配时，给所选单品的穿搭次数 +1
+      incrementWearCount(selectedItemIds);
     }
 
     Alert.alert(isEdit ? '更新成功' : '创建成功', '', [

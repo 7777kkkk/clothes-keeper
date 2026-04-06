@@ -19,9 +19,20 @@ export interface ClothingItem {
   brand: string;
   price: number;
   purchaseDate: Date | null;
+  purchaseDateMode: 'full' | 'year'; // 购买日期模式：完整日期或仅年份
   notes: string;
+  wearCount: number; // 穿搭次数
+  customAttributes: CustomAttribute[]; // 自定义属性
   createdAt: Date;
   updatedAt: Date;
+}
+
+// 自定义属性
+export interface CustomAttribute {
+  id: string;
+  name: string;       // 属性名，如"颜色"、"材质"
+  value: string;     // 属性值，如"蓝色"、"棉"
+  type: 'text' | 'category'; // 类型：文本或分类选项
 }
 
 // 存放位置类型

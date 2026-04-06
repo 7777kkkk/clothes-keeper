@@ -1,9 +1,13 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Category, ClothingItem, Outfit, Occasion, CalendarRecord, LocationType } from '../types';
+import { Category, ClothingItem, Outfit, Occasion, CalendarRecord, LocationType, Season } from '../types';
 import { DEFAULT_CATEGORIES, DEFAULT_OCCASIONS } from '../constants/theme';
 
 const STORAGE_KEY = '@clothes_keeper_data';
+
+type HomeMode = 'default' | 'custom';
+type HomeSortBy = 'name' | 'purchaseDate' | 'wearCount' | 'createdAt';
+type HomeSortOrder = 'asc' | 'desc';
 
 interface AppState {
   // 数据
@@ -12,6 +16,13 @@ interface AppState {
   outfits: Outfit[];
   occasions: Occasion[];
   calendarRecords: CalendarRecord[];
+
+  // 主页模式（自主模式筛选/排序）
+  homeMode: HomeMode;
+  homeSortBy: HomeSortBy;
+  homeSortOrder: HomeSortOrder;
+  homeFilterCategory: string | null;
+  homeFilterSeason: Season | null;
 
   // 加载状态
   isLoaded: boolean;
@@ -41,6 +52,14 @@ interface AppState {
   updateCalendarRecord: (id: string, record: Partial<CalendarRecord>) => void;
   deleteCalendarRecord: (id: string) => void;
 
+  // 主页模式操作
+  setHomeMode: (mode: HomeMode) => void;
+  setHomeSort: (sortBy: HomeSortBy, order?: HomeSortOrder) => void;
+  setHomeFilter: (categoryId: string | null, season: Season | null) => void;
+
+  // 穿搭次数操作
+  incrementWearCount: (itemIds: string[]) => void;
+
   // 初始化（从本地存储加载）
   loadData: () => Promise<void>;
 
@@ -62,7 +81,10 @@ const SAMPLE_CLOTHING_ITEMS: Omit<ClothingItem, 'id' | 'createdAt' | 'updatedAt'
     brand: 'UNIQLO',
     price: 599,
     purchaseDate: new Date('2025-03-15'),
+    purchaseDateMode: 'full',
     notes: '春秋百搭款，搭配白色T恤很好看',
+    wearCount: 5,
+    customAttributes: [],
   },
   {
     name: '白色纯棉T恤',
@@ -74,7 +96,10 @@ const SAMPLE_CLOTHING_ITEMS: Omit<ClothingItem, 'id' | 'createdAt' | 'updatedAt'
     brand: 'UNIQLO',
     price: 79,
     purchaseDate: new Date('2025-04-20'),
+    purchaseDateMode: 'full',
     notes: '基础款，万能内搭',
+    wearCount: 12,
+    customAttributes: [],
   },
   {
     name: '深蓝色牛仔裤',
@@ -86,7 +111,10 @@ const SAMPLE_CLOTHING_ITEMS: Omit<ClothingItem, 'id' | 'createdAt' | 'updatedAt'
     brand: "Levi's",
     price: 699,
     purchaseDate: new Date('2025-01-10'),
+    purchaseDateMode: 'full',
     notes: '经典款版型很好',
+    wearCount: 8,
+    customAttributes: [],
   },
   {
     name: '黑色帆布鞋',
@@ -98,7 +126,10 @@ const SAMPLE_CLOTHING_ITEMS: Omit<ClothingItem, 'id' | 'createdAt' | 'updatedAt'
     brand: 'Converse',
     price: 469,
     purchaseDate: new Date('2025-02-14'),
+    purchaseDateMode: 'full',
     notes: '万年经典款',
+    wearCount: 15,
+    customAttributes: [],
   },
   {
     name: '灰色卫衣',
@@ -110,7 +141,10 @@ const SAMPLE_CLOTHING_ITEMS: Omit<ClothingItem, 'id' | 'createdAt' | 'updatedAt'
     brand: 'Nike',
     price: 399,
     purchaseDate: new Date('2025-11-05'),
+    purchaseDateMode: 'full',
     notes: '冬天必备，舒适百搭',
+    wearCount: 3,
+    customAttributes: [],
   },
   {
     name: '黑色双肩包',
@@ -122,7 +156,10 @@ const SAMPLE_CLOTHING_ITEMS: Omit<ClothingItem, 'id' | 'createdAt' | 'updatedAt'
     brand: '小米',
     price: 169,
     purchaseDate: new Date('2025-08-20'),
+    purchaseDateMode: 'full',
     notes: '日常上课用，容量很大',
+    wearCount: 20,
+    customAttributes: [],
   },
   {
     name: '碎花连衣裙',
@@ -134,7 +171,10 @@ const SAMPLE_CLOTHING_ITEMS: Omit<ClothingItem, 'id' | 'createdAt' | 'updatedAt'
     brand: 'ZARA',
     price: 299,
     purchaseDate: new Date('2025-06-18'),
+    purchaseDateMode: 'full',
     notes: '约会穿很好看',
+    wearCount: 2,
+    customAttributes: [],
   },
   {
     name: '运动短裤',
@@ -146,7 +186,10 @@ const SAMPLE_CLOTHING_ITEMS: Omit<ClothingItem, 'id' | 'createdAt' | 'updatedAt'
     brand: 'Nike',
     price: 199,
     purchaseDate: new Date('2025-05-01'),
+    purchaseDateMode: 'full',
     notes: '跑步健身穿',
+    wearCount: 10,
+    customAttributes: [],
   },
 ];
 
@@ -159,6 +202,13 @@ export const useStore = create<AppState>((set, get) => ({
   calendarRecords: [],
   isLoaded: false,
 
+  // 主页模式默认值
+  homeMode: 'default',
+  homeSortBy: 'createdAt',
+  homeSortOrder: 'desc',
+  homeFilterCategory: null,
+  homeFilterSeason: null,
+
   // 保存到本地存储
   saveData: async () => {
     const state = get();
@@ -168,6 +218,11 @@ export const useStore = create<AppState>((set, get) => ({
       outfits: state.outfits,
       occasions: state.occasions,
       calendarRecords: state.calendarRecords,
+      homeMode: state.homeMode,
+      homeSortBy: state.homeSortBy,
+      homeSortOrder: state.homeSortOrder,
+      homeFilterCategory: state.homeFilterCategory,
+      homeFilterSeason: state.homeFilterSeason,
     };
     try {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -188,6 +243,11 @@ export const useStore = create<AppState>((set, get) => ({
           outfits: data.outfits || [],
           occasions: data.occasions || DEFAULT_OCCASIONS.map(o => ({ ...o })),
           calendarRecords: data.calendarRecords || [],
+          homeMode: data.homeMode || 'default',
+          homeSortBy: data.homeSortBy || 'createdAt',
+          homeSortOrder: data.homeSortOrder || 'desc',
+          homeFilterCategory: data.homeFilterCategory || null,
+          homeFilterSeason: data.homeFilterSeason || null,
           isLoaded: true,
         });
       } else {
@@ -209,6 +269,11 @@ export const useStore = create<AppState>((set, get) => ({
           outfits: [],
           occasions: DEFAULT_OCCASIONS.map(o => ({ ...o })),
           calendarRecords: [],
+          homeMode: 'default',
+          homeSortBy: 'createdAt',
+          homeSortOrder: 'desc',
+          homeFilterCategory: null,
+          homeFilterSeason: null,
         };
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(initialData));
       }
@@ -368,6 +433,38 @@ export const useStore = create<AppState>((set, get) => ({
     set({
       calendarRecords: get().calendarRecords.filter(r => r.id !== id),
     });
+    saveData();
+  },
+
+  // 主页模式操作
+  setHomeMode: (mode) => {
+    set({ homeMode: mode });
+    get().saveData();
+  },
+
+  setHomeSort: (sortBy, order) => {
+    set(state => ({
+      homeSortBy: sortBy,
+      homeSortOrder: order || (state.homeSortBy === sortBy && state.homeSortOrder === 'asc' ? 'desc' : 'asc'),
+    }));
+    get().saveData();
+  },
+
+  setHomeFilter: (categoryId, season) => {
+    set({ homeFilterCategory: categoryId, homeFilterSeason: season });
+    get().saveData();
+  },
+
+  // 穿搭次数 +1
+  incrementWearCount: (itemIds) => {
+    const { clothingItems, saveData } = get();
+    const updatedItems = clothingItems.map(item => {
+      if (itemIds.includes(item.id)) {
+        return { ...item, wearCount: (item.wearCount || 0) + 1, updatedAt: new Date() };
+      }
+      return item;
+    });
+    set({ clothingItems: updatedItems });
     saveData();
   },
 }));
