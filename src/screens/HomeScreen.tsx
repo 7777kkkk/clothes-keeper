@@ -1,415 +1,383 @@
+/**
+ * HomeScreen — 衣橱首页（分类管理模式）
+ *
+ * 设计规范（遵循 impeccable Skill）:
+ * - 玻璃拟态：亚克力半透明卡片 + 柔和蓝调阴影
+ * - 布局节奏：大间距，分类模块间宽松，内容紧凑
+ * - 交互反馈：所有可点击元素有 activeOpacity
+ * - 空状态：友好引导，非空白
+ */
 import React, { useState, useMemo } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  Modal,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  Image, Modal, TextInput, FlatList,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useStore } from '../store/useStore';
-import {
-  COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS,
-} from '../constants/theme';
-import { RootStackParamList, Season } from '../types';
+import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
+import { RootStackParamList, ClothingItem } from '../types';
+import { GlassCard, GlassPill, FAB, SectionHeader, EmptyState, Badge } from '../components/glass/GlassComponents';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-const SEASONS: Season[] = ['春', '夏', '秋', '冬'];
-
-type SortKey = 'name' | 'purchaseDate' | 'wearCount' | 'createdAt';
-const SORT_OPTIONS: { key: SortKey; label: string }[] = [
-  { key: 'name', label: '名称' },
-  { key: 'purchaseDate', label: '日期' },
-  { key: 'wearCount', label: '次数' },
-  { key: 'createdAt', label: '添加' },
-];
 
 // ============================================================
-//  iOS 风格滑动开关
+//  Types
 // ============================================================
-const ModeToggle = ({
-  value,
-  onToggle,
-}: {
-  value: 'default' | 'custom';
-  onToggle: () => void;
-}) => {
-  const isOn = value === 'custom';
-  return (
-    <TouchableOpacity
-      activeOpacity={0.75}
-      onPress={onToggle}
-      style={[styles.toggleOuter, isOn ? styles.toggleOuterOn : styles.toggleOuterOff]}
-    >
-      <View style={[styles.toggleThumb, isOn ? styles.toggleThumbOn : styles.toggleThumbOff]}>
-        <Icon
-          name={isOn ? 'view-dashboard' : 'view-grid'}
-          size={11}
-          color={isOn ? '#fff' : COLORS.textMuted}
-        />
-      </View>
-    </TouchableOpacity>
-  );
-};
+interface CategoryGroup {
+  id: string;
+  name: string;
+  items: ClothingItem[];
+  isEmpty: boolean;
+}
 
 // ============================================================
-//  玻璃拟态卡片（浅色亚克力版）
+//  CategoryItemCard — 衣物缩略图卡片
 // ============================================================
-const GlassCard = ({ children, style }: { children: React.ReactNode; style?: any }) => (
-  <View style={[styles.glassCard, style]}>{children}</View>
-);
-
-// ============================================================
-//  胶囊标签
-// ============================================================
-const PillTag = ({
-  label,
-  active,
+const CategoryItemCard = ({
+  item,
   onPress,
 }: {
-  label: string;
-  active?: boolean;
-  onPress?: () => void;
+  item: ClothingItem;
+  onPress: () => void;
 }) => (
   <TouchableOpacity
-    activeOpacity={0.75}
+    activeOpacity={0.85}
     onPress={onPress}
-    style={[styles.pillTag, active && styles.pillTagActive]}
+    style={styles.thumbCard}
   >
-    <Text style={[styles.pillTagText, active && styles.pillTagTextActive]}>{label}</Text>
+    <Image
+      source={{ uri: item.images[0] }}
+      style={styles.thumbImage}
+      resizeMode="cover"
+    />
+    {item.images.length > 1 && (
+      <View style={styles.thumbMultiBadge}>
+        <Icon name="image-multiple" size={8} color="#fff" />
+      </View>
+    )}
+    {item.wearCount > 0 && (
+      <View style={styles.thumbWearBadge}>
+        <Text style={styles.thumbWearText}>{item.wearCount}次</Text>
+      </View>
+    )}
   </TouchableOpacity>
 );
 
 // ============================================================
-//  主屏幕
+//  EmptyCategoryCard — 空分类引导卡片
+// ============================================================
+const EmptyCategoryCard = ({ onAdd }: { onAdd: () => void }) => (
+  <TouchableOpacity activeOpacity={0.75} onPress={onAdd} style={styles.emptyThumb}>
+    <Icon name="plus" size={28} color={COLORS.textMuted} />
+    <Text style={styles.emptyThumbText}>添加</Text>
+  </TouchableOpacity>
+);
+
+// ============================================================
+//  CategorySection — 单个分类模块
+// ============================================================
+const CategorySection = ({
+  group,
+  onItemPress,
+  onAddItem,
+  onCategoryOptions,
+}: {
+  group: CategoryGroup;
+  onItemPress: (id: string) => void;
+  onAddItem: () => void;
+  onCategoryOptions: () => void;
+}) => (
+  <View style={styles.categorySection}>
+    {/* 分类标题行 */}
+    <View style={styles.catHeaderRow}>
+      <View style={styles.catTitleRow}>
+        <Text style={styles.catTitle}>{group.name}</Text>
+        {!group.isEmpty && (
+          <View style={styles.catCountBadge}>
+            <Text style={styles.catCountText}>{group.items.length}</Text>
+          </View>
+        )}
+      </View>
+      <View style={styles.catActions}>
+        {/* 添加按钮 */}
+        <TouchableOpacity
+          activeOpacity={0.75}
+          onPress={onAddItem}
+          style={styles.catActionBtn}
+        >
+          <Icon name="plus" size={18} color={COLORS.primary} />
+        </TouchableOpacity>
+        {/* 操作菜单按钮 */}
+        <TouchableOpacity
+          activeOpacity={0.75}
+          onPress={onCategoryOptions}
+          style={styles.catActionBtn}
+        >
+          <Icon name="dots-horizontal" size={18} color={COLORS.textSecondary} />
+        </TouchableOpacity>
+      </View>
+    </View>
+
+    {/* 横向滚动衣物 */}
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.thumbsRow}
+    >
+      {group.isEmpty ? (
+        <EmptyCategoryCard onAdd={onAddItem} />
+      ) : (
+        group.items.map(item => (
+          <CategoryItemCard
+            key={item.id}
+            item={item}
+            onPress={() => onItemPress(item.id)}
+          />
+        ))
+      )}
+    </ScrollView>
+  </View>
+);
+
+// ============================================================
+//  CategoryOptionsModal — 分类操作弹窗
+// ============================================================
+const CategoryOptionsModal = ({
+  visible,
+  categoryName,
+  onClose,
+  onEdit,
+  onHide,
+}: {
+  visible: boolean;
+  categoryName: string;
+  onClose: () => void;
+  onEdit: () => void;
+  onHide: () => void;
+}) => (
+  <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <TouchableOpacity
+      style={styles.modalOverlay}
+      activeOpacity={1}
+      onPress={onClose}
+    >
+      <GlassCard style={styles.optionsModal} padding="lg">
+        <Text style={styles.optionsTitle}>{categoryName}</Text>
+        <TouchableOpacity style={styles.optionRow} onPress={onEdit}>
+          <Icon name="pencil-outline" size={20} color={COLORS.textPrimary} />
+          <Text style={styles.optionText}>编辑分类名称</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.optionRow} onPress={onHide}>
+          <Icon name="eye-off-outline" size={20} color={COLORS.textPrimary} />
+          <Text style={styles.optionText}>隐藏该分类</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.optionRow, styles.optionRowDestructive]} onPress={onClose}>
+          <Icon name="close" size={20} color={COLORS.error} />
+          <Text style={[styles.optionText, { color: COLORS.error }]}>取消</Text>
+        </TouchableOpacity>
+      </GlassCard>
+    </TouchableOpacity>
+  </Modal>
+);
+
+// ============================================================
+//  SearchModal — 搜索弹窗
+// ============================================================
+const SearchModal = ({
+  visible,
+  onClose,
+  items,
+  onItemPress,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  items: ClothingItem[];
+  onItemPress: (id: string) => void;
+}) => {
+  const [query, setQuery] = useState('');
+  const filtered = useMemo(() => {
+    if (!query.trim()) return [];
+    return items.filter(i => i.name.toLowerCase().includes(query.toLowerCase()));
+  }, [items, query]);
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={styles.searchOverlay}>
+        <GlassCard style={styles.searchCard} padding="none">
+          <View style={styles.searchInputRow}>
+            <Icon name="magnify" size={20} color={COLORS.textMuted} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="搜索衣物..."
+              placeholderTextColor={COLORS.textMuted}
+              value={query}
+              onChangeText={setQuery}
+              autoFocus
+            />
+            <TouchableOpacity onPress={onClose}>
+              <Icon name="close" size={20} color={COLORS.textMuted} />
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={styles.searchResults} showsVerticalScrollIndicator={false}>
+            {filtered.map(item => (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.searchResultItem}
+                onPress={() => { onItemPress(item.id); onClose(); }}
+              >
+                <Image source={{ uri: item.images[0] }} style={styles.searchResultThumb} />
+                <View style={styles.searchResultInfo}>
+                  <Text style={styles.searchResultName}>{item.name}</Text>
+                  <Text style={styles.searchResultMeta}>{item.wearCount}次</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+            {query && filtered.length === 0 && (
+              <Text style={styles.searchEmpty}>没有找到匹配的衣物</Text>
+            )}
+          </ScrollView>
+        </GlassCard>
+      </View>
+    </Modal>
+  );
+};
+
+// ============================================================
+//  HomeScreen — 主页面
 // ============================================================
 const HomeScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
-  const {
-    clothingItems, categories,
-    homeMode, homeSortBy, homeSortOrder,
-    homeFilterCategory, homeFilterSeason,
-    setHomeMode, setHomeSort, setHomeFilter,
-  } = useStore();
+  const { clothingItems, categories, addClothingItem } = useStore();
 
-  const [showFilterModal, setShowFilterModal] = useState(false);
-  const [tempFilterCategory, setTempFilterCategory] = useState<string | null>(homeFilterCategory);
-  const [tempFilterSeason, setTempFilterSeason] = useState<Season | null>(homeFilterSeason);
+  // 分类操作弹窗
+  const [optionsModalCat, setOptionsModalCat] = useState<CategoryGroup | null>(null);
+  const [searchVisible, setSearchVisible] = useState(false);
 
-  // 按分类分组（默认模式）
-  const groupedData = useMemo(() =>
+  // 按分类分组
+  const categoryGroups: CategoryGroup[] = useMemo(() =>
     categories.map(cat => ({
-      category: cat,
-      items: clothingItems.filter(item => item.categoryId === cat.id),
-    })).filter(g => g.items.length > 0),
+      id: cat.id,
+      name: cat.name,
+      items: clothingItems.filter(i => i.categoryId === cat.id),
+      isEmpty: clothingItems.filter(i => i.categoryId === cat.id).length === 0,
+    })),
     [categories, clothingItems]
   );
 
-  // 自主模式：筛选 + 排序
-  const filteredItems = useMemo(() => {
-    let items = [...clothingItems];
-    if (homeFilterCategory) items = items.filter(i => i.categoryId === homeFilterCategory);
-    if (homeFilterSeason) items = items.filter(i => i.seasons.includes(homeFilterSeason));
-    items.sort((a, b) => {
-      let cmp = 0;
-      switch (homeSortBy) {
-        case 'name': cmp = a.name.localeCompare(b.name); break;
-        case 'purchaseDate':
-          cmp = (a.purchaseDate?.getTime() || 0) - (b.purchaseDate?.getTime() || 0); break;
-        case 'wearCount': cmp = (a.wearCount || 0) - (b.wearCount || 0); break;
-        default:
-          cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-      }
-      return homeSortOrder === 'asc' ? cmp : -cmp;
-    });
-    return items;
-  }, [clothingItems, homeFilterCategory, homeFilterSeason, homeSortBy, homeSortOrder]);
-
-  const hasFilters = homeFilterCategory || homeFilterSeason;
-  const isCustom = homeMode === 'custom';
-  const getCategoryName = (id: string) => categories.find(c => c.id === id)?.name || '未分类';
+  // 全部有衣物的分类（排在前面）
+  const nonEmptyFirst = useMemo(() =>
+    [...categoryGroups].sort((a, b) => {
+      if (a.isEmpty && !b.isEmpty) return 1;
+      if (!a.isEmpty && b.isEmpty) return -1;
+      return 0;
+    }),
+    [categoryGroups]
+  );
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* ========== 顶部标题栏 ========== */}
-      <View style={styles.header}>
-        <ModeToggle
-          value={homeMode}
-          onToggle={() => setHomeMode(isCustom ? 'default' : 'custom')}
-        />
-        <Text style={styles.title}>我的衣橱</Text>
+      {/* ===== 顶部导航栏 ===== */}
+      <View style={styles.topNav}>
         <TouchableOpacity
           activeOpacity={0.75}
-          onPress={() => navigation.navigate('AddClothing')}
-          style={styles.addBtn}
+          onPress={() => setSearchVisible(true)}
+          style={styles.topNavBtn}
         >
-          <Icon name="plus" size={22} color={COLORS.primary} />
+          <Icon name="magnify" size={22} color={COLORS.textPrimary} />
+        </TouchableOpacity>
+        <Text style={styles.topNavTitle}>我的衣橱</Text>
+        <TouchableOpacity
+          activeOpacity={0.75}
+          onPress={() => navigation.navigate('CategoryManage')}
+          style={styles.topNavBtn}
+        >
+          <Icon name="playlist-edit" size={22} color={COLORS.textPrimary} />
         </TouchableOpacity>
       </View>
 
-      {/* ========== 默认模式：横向滚动分类 ========== */}
-      {!isCustom && (
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 90 }]}
-          showsVerticalScrollIndicator={false}
-        >
-          {groupedData.length > 0 ? (
-            groupedData.map(({ category, items }) => (
-              <View key={category.id} style={styles.categorySection}>
-                {/* 分类标题 */}
-                <View style={styles.categoryHeader}>
-                  <Text style={styles.categoryTitle}>{category.name}</Text>
-                  <View style={styles.categoryCountBadge}>
-                    <Text style={styles.categoryCount}>{items.length}</Text>
-                  </View>
-                </View>
+      {/* ===== 衣橱概览标签 ===== */}
+      <View style={styles.overviewRow}>
+        <GlassCard style={styles.overviewCard} padding="md">
+          <Text style={styles.overviewNumber}>{clothingItems.length}</Text>
+          <Text style={styles.overviewLabel}>单品总数</Text>
+        </GlassCard>
+        <GlassCard style={styles.overviewCard} padding="md">
+          <Text style={styles.overviewNumber}>{categories.length}</Text>
+          <Text style={styles.overviewLabel}>分类</Text>
+        </GlassCard>
+        <GlassCard style={styles.overviewCard} padding="md">
+          <Text style={styles.overviewNumber}>
+            {clothingItems.reduce((sum, i) => sum + (i.price || 0), 0) > 0
+              ? `¥${clothingItems.reduce((sum, i) => sum + (i.price || 0), 0)}`
+              : '—'}
+          </Text>
+          <Text style={styles.overviewLabel}>总价值</Text>
+        </GlassCard>
+      </View>
 
-                {/* 横向滚动卡片 */}
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.cardsRow}
-                >
-                  {items.map(item => (
-                    <TouchableOpacity
-                      key={item.id}
-                      activeOpacity={0.85}
-                      onPress={() => navigation.navigate('ClothingDetail', { itemId: item.id })}
-                      style={styles.clothingCard}
-                    >
-                      <Image
-                        source={{ uri: item.images[0] }}
-                        style={styles.clothingImage}
-                        resizeMode="cover"
-                      />
-                      {item.images.length > 1 && (
-                        <View style={styles.imageCountBadge}>
-                          <Icon name="image-multiple" size={10} color="#fff" />
-                          <Text style={styles.imageCountText}>{item.images.length}</Text>
-                        </View>
-                      )}
-                      {(item.wearCount || 0) > 0 && (
-                        <View style={styles.wearCountBadge}>
-                          <Text style={styles.wearCountText}>{item.wearCount}次</Text>
-                        </View>
-                      )}
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-            ))
-          ) : (
-            <View style={styles.emptyState}>
-              <Icon name="wardrobe-outline" size={72} color={COLORS.textMuted} />
-              <Text style={styles.emptyTitle}>衣橱空空如也</Text>
-              <Text style={styles.emptySubtitle}>添加你的第一件衣物</Text>
-              <TouchableOpacity
-                style={styles.emptyAddBtn}
-                onPress={() => navigation.navigate('AddClothing')}
-              >
-                <Icon name="plus" size={18} color="#fff" />
-                <Text style={styles.emptyAddBtnText}>添加衣物</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </ScrollView>
-      )}
+      {/* ===== 分类列表 ===== */}
+      <ScrollView
+        style={styles.mainScroll}
+        contentContainerStyle={[styles.mainContent, { paddingBottom: insets.bottom + 100 }]}
+        showsVerticalScrollIndicator={false}
+      >
+        {nonEmptyFirst.map(group => (
+          <CategorySection
+            key={group.id}
+            group={group}
+            onItemPress={id => navigation.navigate('ClothingDetail', { itemId: id })}
+            onAddItem={() => navigation.navigate('AddClothing')}
+            onCategoryOptions={() => setOptionsModalCat(group)}
+          />
+        ))}
 
-      {/* ========== 自主模式：网格 + 工具栏 ========== */}
-      {isCustom && (
-        <>
-          {/* 工具栏 */}
-          <View style={styles.toolbar}>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => {
-                setTempFilterCategory(homeFilterCategory);
-                setTempFilterSeason(homeFilterSeason);
-                setShowFilterModal(true);
-              }}
-              style={[styles.toolbarBtn, hasFilters && styles.toolbarBtnActive]}
-            >
-              <Icon
-                name="filter-variant"
-                size={15}
-                color={hasFilters ? '#fff' : COLORS.textSecondary}
-              />
-              <Text style={[styles.toolbarBtnText, hasFilters && styles.toolbarBtnTextActive]}>
-                {hasFilters ? '已筛选' : '筛选'}
-              </Text>
-            </TouchableOpacity>
+        {categoryGroups.length === 0 && (
+          <EmptyState
+            icon="wardrobe-outline"
+            title="还没有分类"
+            subtitle="去设置中添加分类"
+            actionLabel="管理分类"
+            onAction={() => navigation.navigate('CategoryManage')}
+          />
+        )}
+      </ScrollView>
 
-            <View style={styles.sortRow}>
-              {SORT_OPTIONS.map(opt => (
-                <TouchableOpacity
-                  key={opt.key}
-                  activeOpacity={0.75}
-                  onPress={() => setHomeSort(opt.key)}
-                  style={[styles.sortBtn, homeSortBy === opt.key && styles.sortBtnActive]}
-                >
-                  <Text style={[styles.sortBtnText, homeSortBy === opt.key && styles.sortBtnTextActive]}>
-                    {opt.label}
-                  </Text>
-                  {homeSortBy === opt.key && (
-                    <Icon
-                      name={homeSortOrder === 'asc' ? 'chevron-up' : 'chevron-down'}
-                      size={13}
-                      color={COLORS.primary}
-                    />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
+      {/* ===== 右下角悬浮 FAB ===== */}
+      <FAB
+        icon="plus"
+        onPress={() => navigation.navigate('AddClothing')}
+        style={{ bottom: insets.bottom + 90 }}
+      />
 
-          {/* 筛选标签 */}
-          {hasFilters && (
-            <View style={styles.filterTagsRow}>
-              {homeFilterCategory && (
-                <View style={styles.filterTag}>
-                  <Text style={styles.filterTagText}>{getCategoryName(homeFilterCategory)}</Text>
-                  <TouchableOpacity onPress={() => setHomeFilter(null, homeFilterSeason)}>
-                    <Icon name="close-circle" size={14} color={COLORS.textMuted} />
-                  </TouchableOpacity>
-                </View>
-              )}
-              {homeFilterSeason && (
-                <View style={styles.filterTag}>
-                  <Text style={styles.filterTagText}>{homeFilterSeason}季</Text>
-                  <TouchableOpacity onPress={() => setHomeFilter(homeFilterCategory, null)}>
-                    <Icon name="close-circle" size={14} color={COLORS.textMuted} />
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-          )}
+      {/* ===== 分类操作弹窗 ===== */}
+      <CategoryOptionsModal
+        visible={!!optionsModalCat}
+        categoryName={optionsModalCat?.name || ''}
+        onClose={() => setOptionsModalCat(null)}
+        onEdit={() => {
+          setOptionsModalCat(null);
+          navigation.navigate('CategoryManage');
+        }}
+        onHide={() => setOptionsModalCat(null)}
+      />
 
-          {/* 网格内容 */}
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={[styles.gridContainer, { paddingBottom: insets.bottom + 90 }]}
-            showsVerticalScrollIndicator={false}
-          >
-            {filteredItems.length > 0 ? (
-              filteredItems.map(item => (
-                <TouchableOpacity
-                  key={item.id}
-                  activeOpacity={0.85}
-                  onPress={() => navigation.navigate('ClothingDetail', { itemId: item.id })}
-                  style={styles.gridCard}
-                >
-                  <Image
-                    source={{ uri: item.images[0] }}
-                    style={styles.gridCardImage}
-                    resizeMode="cover"
-                  />
-                  <View style={styles.gridCardBody}>
-                    <Text style={styles.gridCardName} numberOfLines={1}>{item.name}</Text>
-                    <Text style={styles.gridCardMeta}>
-                      {getCategoryName(item.categoryId)} · {item.wearCount || 0}次
-                    </Text>
-                  </View>
-                  {item.images.length > 1 && (
-                    <View style={styles.gridImageBadge}>
-                      <Icon name="image-multiple" size={10} color="#fff" />
-                      <Text style={styles.gridImageCount}>{item.images.length}</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              ))
-            ) : (
-              <View style={styles.emptyState}>
-                <Icon name="filter-outline" size={64} color={COLORS.textMuted} />
-                <Text style={styles.emptyTitle}>没有找到</Text>
-                <TouchableOpacity
-                  style={styles.clearFilterBtn}
-                  onPress={() => setHomeFilter(null, null)}
-                >
-                  <Text style={styles.clearFilterBtnText}>清除筛选</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </ScrollView>
-        </>
-      )}
-
-      {/* ========== 筛选弹窗 ========== */}
-      <Modal visible={showFilterModal} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <GlassCard style={styles.filterModal}>
-            <Text style={styles.filterModalTitle}>筛选条件</Text>
-
-            <Text style={styles.filterSectionTitle}>按品类</Text>
-            <View style={styles.filterChipGroup}>
-              <PillTag
-                label="全部"
-                active={!tempFilterCategory}
-                onPress={() => setTempFilterCategory(null)}
-              />
-              {categories.map(cat => (
-                <PillTag
-                  key={cat.id}
-                  label={cat.name}
-                  active={tempFilterCategory === cat.id}
-                  onPress={() => setTempFilterCategory(cat.id)}
-                />
-              ))}
-            </View>
-
-            <Text style={styles.filterSectionTitle}>按季节</Text>
-            <View style={styles.filterChipGroup}>
-              <PillTag
-                label="全部"
-                active={!tempFilterSeason}
-                onPress={() => setTempFilterSeason(null)}
-              />
-              {SEASONS.map(s => (
-                <PillTag
-                  key={s}
-                  label={s}
-                  active={tempFilterSeason === s}
-                  onPress={() => setTempFilterSeason(s)}
-                />
-              ))}
-            </View>
-
-            <View style={styles.filterActions}>
-              <TouchableOpacity
-                style={styles.filterClearBtn}
-                onPress={() => { setTempFilterCategory(null); setTempFilterSeason(null); }}
-              >
-                <Text style={styles.filterClearBtnText}>清除</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.filterApplyBtn}
-                onPress={() => { setHomeFilter(tempFilterCategory, tempFilterSeason); setShowFilterModal(false); }}
-              >
-                <Text style={styles.filterApplyBtnText}>应用</Text>
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity
-              style={styles.filterCloseBtn}
-              onPress={() => setShowFilterModal(false)}
-            >
-              <Text style={styles.filterCloseBtnText}>取消</Text>
-            </TouchableOpacity>
-          </GlassCard>
-        </View>
-      </Modal>
+      {/* ===== 搜索弹窗 ===== */}
+      <SearchModal
+        visible={searchVisible}
+        onClose={() => setSearchVisible(false)}
+        items={clothingItems}
+        onItemPress={id => navigation.navigate('ClothingDetail', { itemId: id })}
+      />
     </SafeAreaView>
   );
 };
 
 // ============================================================
-//  Styles — Light Glass UI
+//  Styles — 玻璃拟态 + 大圆角
 // ============================================================
 const styles = StyleSheet.create({
   container: {
@@ -417,88 +385,83 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
 
-  // ---- 顶部标题栏 ----
-  header: {
+  // ---- 顶部导航 ----
+  topNav: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: SPACING.xl,
+    paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
+    backgroundColor: COLORS.glass,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
     gap: SPACING.md,
   },
-
-  // iOS 滑动开关
-  toggleOuter: {
-    width: 48,
-    height: 28,
-    borderRadius: 14,
-    justifyContent: 'center',
-    padding: 3,
-  },
-  toggleOuterOn: {
-    backgroundColor: COLORS.primarySoft,
-    borderWidth: 1,
-    borderColor: 'rgba(59,130,246,0.25)',
-  },
-  toggleOuterOff: {
-    backgroundColor: 'rgba(0,0,0,0.06)',
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  toggleThumb: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  toggleThumbOn: {
-    backgroundColor: COLORS.primary,
-    alignSelf: 'flex-end',
-  },
-  toggleThumbOff: {
-    backgroundColor: COLORS.textMuted,
-    alignSelf: 'flex-start',
-  },
-
-  title: {
+  topNavTitle: {
     flex: 1,
     fontSize: FONT_SIZES.xxl,
     fontWeight: '800',
     color: COLORS.textPrimary,
+    textAlign: 'center',
     letterSpacing: -0.5,
   },
-  addBtn: {
+  topNavBtn: {
     width: 40,
     height: 40,
     borderRadius: BORDER_RADIUS.md,
-    backgroundColor: COLORS.primarySoft,
-    borderWidth: 1,
-    borderColor: 'rgba(59,130,246,0.20)',
     justifyContent: 'center',
     alignItems: 'center',
   },
 
-  // ---- 滚动区域 ----
-  scrollView: { flex: 1 },
-  scrollContent: { paddingTop: SPACING.md },
+  // ---- 概览标签 ----
+  overviewRow: {
+    flexDirection: 'row',
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+    gap: SPACING.sm,
+  },
+  overviewCard: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: SPACING.md,
+  },
+  overviewNumber: {
+    fontSize: FONT_SIZES.xl,
+    fontWeight: '800',
+    color: COLORS.primary,
+  },
+  overviewLabel: {
+    fontSize: FONT_SIZES.xs,
+    color: COLORS.textSecondary,
+    marginTop: 2,
+    fontWeight: '500',
+  },
 
-  // ---- 默认模式：分类模块 ----
+  // ---- 主滚动区 ----
+  mainScroll: { flex: 1 },
+  mainContent: { paddingTop: SPACING.md },
+
+  // ---- 分类模块 ----
   categorySection: {
     marginBottom: SPACING.xxl,
   },
-  categoryHeader: {
+  catHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: SPACING.xl,
     marginBottom: SPACING.md,
+  },
+  catTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: SPACING.sm,
   },
-  categoryTitle: {
+  catTitle: {
     fontSize: FONT_SIZES.xl,
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
-  categoryCountBadge: {
+  catCountBadge: {
     backgroundColor: 'rgba(0,0,0,0.05)',
     borderRadius: BORDER_RADIUS.full,
     paddingHorizontal: SPACING.sm,
@@ -506,18 +469,32 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
   },
-  categoryCount: {
+  catCountText: {
     fontSize: FONT_SIZES.xs,
     color: COLORS.textSecondary,
     fontWeight: '600',
   },
-  cardsRow: {
-    paddingHorizontal: SPACING.xl,
-    gap: SPACING.md,
+  catActions: {
+    flexDirection: 'row',
+    gap: SPACING.xs,
   },
-  clothingCard: {
-    width: 110,
-    height: 148,
+  catActionBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: BORDER_RADIUS.md,
+    backgroundColor: 'rgba(0,0,0,0.04)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // ---- 缩略图 ----
+  thumbsRow: {
+    paddingHorizontal: SPACING.xl,
+    gap: SPACING.sm,
+  },
+  thumbCard: {
+    width: 88,
+    height: 112,
     borderRadius: BORDER_RADIUS.lg,
     overflow: 'hidden',
     backgroundColor: COLORS.glass,
@@ -525,329 +502,145 @@ const styles = StyleSheet.create({
     borderColor: COLORS.glassBorder,
     ...SHADOWS.glass,
   },
-  clothingImage: {
+  thumbImage: {
     width: '100%',
     height: '100%',
     backgroundColor: 'rgba(0,0,0,0.05)',
   },
-  imageCountBadge: {
+  thumbMultiBadge: {
     position: 'absolute',
-    bottom: 6,
-    right: 6,
-    flexDirection: 'row',
-    alignItems: 'center',
+    bottom: 4,
+    right: 4,
     backgroundColor: 'rgba(0,0,0,0.45)',
-    borderRadius: 8,
-    paddingHorizontal: 5,
+    borderRadius: 6,
+    paddingHorizontal: 4,
     paddingVertical: 2,
-    gap: 2,
   },
-  imageCountText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  wearCountBadge: {
+  thumbWearBadge: {
     position: 'absolute',
-    top: 6,
-    left: 6,
+    top: 4,
+    left: 4,
     backgroundColor: COLORS.primarySoft,
     borderRadius: BORDER_RADIUS.full,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderWidth: 1,
-    borderColor: 'rgba(59,130,246,0.20)',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
   },
-  wearCountText: {
+  thumbWearText: {
     fontSize: 9,
     color: COLORS.primary,
     fontWeight: '700',
   },
 
-  // ---- 自主模式：工具栏 ----
-  toolbar: {
-    paddingHorizontal: SPACING.xl,
-    paddingVertical: SPACING.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  toolbarBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs + 2,
-    borderRadius: BORDER_RADIUS.full,
-    borderWidth: 1,
+  // ---- 空缩略图 ----
+  emptyThumb: {
+    width: 88,
+    height: 112,
+    borderRadius: BORDER_RADIUS.lg,
+    borderWidth: 2,
     borderColor: COLORS.border,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
     gap: 4,
   },
-  toolbarBtnActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
-  },
-  toolbarBtnText: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
-    fontWeight: '500',
-  },
-  toolbarBtnTextActive: {
-    color: '#fff',
-  },
-  sortRow: {
-    flex: 1,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: SPACING.xs,
-  },
-  sortBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: SPACING.xs,
-    borderRadius: BORDER_RADIUS.sm,
-    gap: 2,
-  },
-  sortBtnActive: {
-    backgroundColor: COLORS.primarySoft,
-  },
-  sortBtnText: {
+  emptyThumbText: {
     fontSize: FONT_SIZES.xs,
     color: COLORS.textMuted,
-    fontWeight: '500',
-  },
-  sortBtnTextActive: {
-    color: COLORS.primary,
-    fontWeight: '700',
   },
 
-  // 筛选标签行
-  filterTagsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: SPACING.sm,
-    paddingHorizontal: SPACING.xl,
-    paddingVertical: SPACING.sm,
-  },
-  filterTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.primarySoft,
-    borderRadius: BORDER_RADIUS.full,
-    paddingLeft: SPACING.sm,
-    paddingRight: SPACING.xs,
-    paddingVertical: 3,
-    gap: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(59,130,246,0.20)',
-  },
-  filterTagText: {
-    fontSize: FONT_SIZES.xs,
-    color: COLORS.primary,
-    fontWeight: '600',
-  },
-
-  // ---- 自主模式：网格 ----
-  gridContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: SPACING.lg,
-    paddingTop: SPACING.lg,
-    gap: SPACING.md,
-  },
-  gridCard: {
-    width: '47%',
-    borderRadius: BORDER_RADIUS.xl,
-    overflow: 'hidden',
-    backgroundColor: COLORS.glass,
-    borderWidth: 1,
-    borderColor: COLORS.glassBorder,
-    ...SHADOWS.glass,
-  },
-  gridCardImage: {
-    width: '100%',
-    height: 160,
-    backgroundColor: 'rgba(0,0,0,0.05)',
-  },
-  gridCardBody: {
-    padding: SPACING.md,
-  },
-  gridCardName: {
-    fontSize: FONT_SIZES.sm,
-    fontWeight: '600',
-    color: COLORS.textPrimary,
-    marginBottom: 3,
-  },
-  gridCardMeta: {
-    fontSize: FONT_SIZES.xs,
-    color: COLORS.textSecondary,
-  },
-  gridImageBadge: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    borderRadius: 8,
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-    gap: 2,
-  },
-  gridImageCount: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-
-  // ---- 胶囊标签 ----
-  pillTag: {
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs + 2,
-    borderRadius: BORDER_RADIUS.full,
-    backgroundColor: 'rgba(0,0,0,0.05)',
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  pillTagActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
-  },
-  pillTagText: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
-    fontWeight: '500',
-  },
-  pillTagTextActive: {
-    color: '#fff',
-    fontWeight: '700',
-  },
-
-  // ---- 空状态 ----
-  emptyState: {
-    flex: 1,
-    alignItems: 'center',
-    paddingTop: 120,
-  },
-  emptyTitle: {
-    fontSize: FONT_SIZES.xl,
-    fontWeight: 'bold',
-    color: COLORS.textSecondary,
-    marginTop: SPACING.lg,
-    marginBottom: SPACING.sm,
-  },
-  emptySubtitle: {
-    fontSize: FONT_SIZES.md,
-    color: COLORS.textMuted,
-    marginBottom: SPACING.xl,
-  },
-  emptyAddBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: SPACING.xl,
-    paddingVertical: SPACING.md,
-    borderRadius: BORDER_RADIUS.full,
-    gap: 6,
-    ...SHADOWS.subtle,
-  },
-  emptyAddBtnText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: FONT_SIZES.md,
-  },
-  clearFilterBtn: {
-    backgroundColor: 'rgba(0,0,0,0.05)',
-    paddingHorizontal: SPACING.xl,
-    paddingVertical: SPACING.md,
-    borderRadius: BORDER_RADIUS.full,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  clearFilterBtnText: {
-    color: COLORS.textSecondary,
-    fontWeight: '600',
-    fontSize: FONT_SIZES.md,
-  },
-
-  // ---- 玻璃卡片 ----
-  glassCard: {
-    backgroundColor: '#fff',
-    borderRadius: BORDER_RADIUS.xl,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    ...SHADOWS.card,
-  },
-
-  // ---- 筛选弹窗 ----
+  // ---- 分类操作弹窗 ----
   modalOverlay: {
     flex: 1,
     backgroundColor: COLORS.overlay,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  filterModal: {
-    width: 320,
-    padding: SPACING.xl,
+  optionsModal: {
+    width: 280,
   },
-  filterModalTitle: {
-    fontSize: FONT_SIZES.xl,
+  optionsTitle: {
+    fontSize: FONT_SIZES.lg,
     fontWeight: '700',
     color: COLORS.textPrimary,
     textAlign: 'center',
-    marginBottom: SPACING.xl,
+    marginBottom: SPACING.lg,
   },
-  filterSectionTitle: {
-    fontSize: FONT_SIZES.sm,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
-    marginBottom: SPACING.sm,
-    marginTop: SPACING.md,
-  },
-  filterChipGroup: {
+  optionRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'center',
+    paddingVertical: SPACING.md,
+    gap: SPACING.md,
+  },
+  optionRowDestructive: {
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    marginTop: SPACING.sm,
+    paddingTop: SPACING.lg,
+  },
+  optionText: {
+    fontSize: FONT_SIZES.md,
+    color: COLORS.textPrimary,
+  },
+
+  // ---- 搜索弹窗 ----
+  searchOverlay: {
+    flex: 1,
+    backgroundColor: COLORS.overlay,
+    justifyContent: 'flex-start',
+    paddingTop: 120,
+    alignItems: 'center',
+  },
+  searchCard: {
+    width: '90%',
+    maxHeight: '70%',
+    overflow: 'hidden',
+  },
+  searchInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
     gap: SPACING.sm,
   },
-  filterActions: {
+  searchInput: {
+    flex: 1,
+    fontSize: FONT_SIZES.md,
+    color: COLORS.textPrimary,
+  },
+  searchResults: {
+    maxHeight: 360,
+  },
+  searchResultItem: {
     flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.sm,
     gap: SPACING.md,
-    marginTop: SPACING.xl,
   },
-  filterClearBtn: {
-    flex: 1,
-    paddingVertical: SPACING.md,
+  searchResultThumb: {
+    width: 44,
+    height: 44,
     borderRadius: BORDER_RADIUS.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.05)',
   },
-  filterClearBtnText: {
+  searchResultInfo: {
+    flex: 1,
+  },
+  searchResultName: {
     fontSize: FONT_SIZES.md,
-    color: COLORS.textSecondary,
     fontWeight: '600',
+    color: COLORS.textPrimary,
   },
-  filterApplyBtn: {
-    flex: 1,
-    paddingVertical: SPACING.md,
-    borderRadius: BORDER_RADIUS.md,
-    backgroundColor: COLORS.primary,
-    alignItems: 'center',
-    ...SHADOWS.subtle,
+  searchResultMeta: {
+    fontSize: FONT_SIZES.xs,
+    color: COLORS.textSecondary,
+    marginTop: 2,
   },
-  filterApplyBtnText: {
-    fontSize: FONT_SIZES.md,
-    color: '#fff',
-    fontWeight: '700',
-  },
-  filterCloseBtn: {
-    marginTop: SPACING.md,
-    paddingVertical: SPACING.md,
-    alignItems: 'center',
-  },
-  filterCloseBtnText: {
+  searchEmpty: {
+    textAlign: 'center',
+    paddingVertical: SPACING.xl,
     fontSize: FONT_SIZES.md,
     color: COLORS.textMuted,
   },

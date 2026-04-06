@@ -91,25 +91,43 @@ export const BORDER_RADIUS = {
 };
 
 // ============================================================
-//  Shadows — 柔和冷色阴影
+//  Shadows — 玻璃拟态柔和阴影
 // ============================================================
 export const SHADOWS = {
-  // 玻璃卡片悬浮感
+  // 玻璃卡片悬浮感（柔和发散）
   glass: {
-    shadowColor: COLORS.shadowColor,
-    shadowOffset: { width: 0, height: 8 },
+    shadowColor: 'rgba(59, 130, 246, 0.12)',
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 1,
-    shadowRadius: 24,
-    elevation: 12,
+    shadowRadius: 20,
+    elevation: 8,
+  },
+
+  // 玻璃卡片（更轻量）
+  glassSm: {
+    shadowColor: 'rgba(59, 130, 246, 0.08)',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 4,
   },
 
   // 按钮/标签微阴影
   subtle: {
-    shadowColor: COLORS.shadowColorLight,
-    shadowOffset: { width: 0, height: 3 },
+    shadowColor: 'rgba(0, 0, 0, 0.06)',
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+
+  // FAB 悬浮阴影
+  fab: {
+    shadowColor: 'rgba(59, 130, 246, 0.30)',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 1,
+    shadowRadius: 16,
+    elevation: 12,
   },
 
   // Tab Bar 阴影
