@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -9,14 +9,16 @@ import {
   Image,
   Alert,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { useStore } from '../store/useStore';
-import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../constants/theme';
+import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
 import { RootStackParamList } from '../types';
 
 type RouteProps = RouteProp<RootStackParamList, 'CreateOutfit'>;
 
 const CreateOutfitScreen = () => {
+  const insets = useSafeAreaInsets();
   const route = useRoute<RouteProps>();
   const navigation = useNavigation();
   const { outfitId } = route.params || {};
@@ -94,7 +96,8 @@ const CreateOutfitScreen = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { paddingBottom: insets.bottom + 80 }]}>
+      <View style={{ height: insets.top > 0 ? 0 : SPACING.md }} />
       {/* 名称 */}
       <View style={styles.section}>
         <Text style={styles.label}>搭配名称 *</Text>

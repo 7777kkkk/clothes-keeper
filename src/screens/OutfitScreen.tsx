@@ -5,9 +5,10 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  SafeAreaView,
   Image,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useStore } from '../store/useStore';
@@ -17,6 +18,7 @@ import { RootStackParamList, Outfit } from '../types';
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const OutfitScreen = () => {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { outfits, occasions, clothingItems } = useStore();
   const [selectedOccasion, setSelectedOccasion] = useState<string | null>(null);
@@ -59,7 +61,7 @@ const OutfitScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { paddingBottom: insets.bottom + 80 }]} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.title}>我的搭配</Text>
         <TouchableOpacity

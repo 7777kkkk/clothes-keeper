@@ -8,11 +8,13 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
 import { Category } from '../types';
 
 const CategoryManageScreen = () => {
+  const insets = useSafeAreaInsets();
   const { categories, addCategory, updateCategory, deleteCategory } = useStore();
   const [newName, setNewName] = useState('');
 
@@ -46,7 +48,8 @@ const CategoryManageScreen = () => {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top > 0 ? 0 : SPACING.md, paddingBottom: insets.bottom + 80 }]}>
+      <View style={{ height: insets.top }} />
       {/* 添加新品类 */}
       <View style={styles.addSection}>
         <TextInput

@@ -9,19 +9,20 @@ import {
   Image,
   Alert,
   Modal,
-  ScrollView as RNScrollView,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useStore } from '../store/useStore';
-import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../constants/theme';
+import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
 import { Season, LocationType, CustomAttribute } from '../types';
 
 const SEASONS: Season[] = ['春', '夏', '秋', '冬'];
 const LOCATION_TYPES: LocationType[] = ['家', '学校'];
 
 const AddClothingScreen = () => {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const { addClothingItem, categories } = useStore();
 
@@ -183,7 +184,8 @@ const AddClothingScreen = () => {
   const years = Array.from({ length: 50 }, (_, i) => currentYear - i + 10);
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { paddingBottom: insets.bottom + 80 }]}>
+      <View style={{ height: insets.top > 0 ? 0 : SPACING.md }} />
       {/* 图片选择 */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>图片（{images.length}/9）</Text>
@@ -438,7 +440,7 @@ const AddClothingScreen = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.yearPickerModal}>
             <Text style={styles.yearPickerTitle}>选择年份</Text>
-            <RNScrollView style={styles.yearScrollView}>
+            <ScrollView style={styles.yearScrollView}>
               {years.map(year => (
                 <TouchableOpacity
                   key={year}
@@ -450,7 +452,7 @@ const AddClothingScreen = () => {
                   </Text>
                 </TouchableOpacity>
               ))}
-            </RNScrollView>
+            </ScrollView>
             <View style={styles.modalBtns}>
               <TouchableOpacity
                 style={[styles.modalBtn, styles.modalCancelBtn]}
@@ -747,11 +749,13 @@ const styles = StyleSheet.create({
     marginTop: SPACING.sm,
   },
   saveButton: {
-    margin: SPACING.lg,
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING.lg,
     backgroundColor: COLORS.primary,
     paddingVertical: SPACING.md,
     borderRadius: BORDER_RADIUS.md,
     alignItems: 'center',
+    ...SHADOWS.card,
   },
   saveButtonText: {
     color: '#fff',

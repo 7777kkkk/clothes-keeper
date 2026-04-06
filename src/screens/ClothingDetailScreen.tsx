@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
@@ -23,6 +24,7 @@ const SEASONS: Season[] = ['春', '夏', '秋', '冬'];
 const LOCATION_TYPES: LocationType[] = ['家', '学校'];
 
 const ClothingDetailScreen = () => {
+  const insets = useSafeAreaInsets();
   const route = useRoute<RouteProps>();
   const navigation = useNavigation();
   const { itemId } = route.params;
@@ -31,7 +33,7 @@ const ClothingDetailScreen = () => {
   const item = clothingItems.find(c => c.id === itemId);
   if (!item) {
     return (
-      <View style={styles.notFound}>
+      <View style={[styles.notFound, { paddingTop: insets.top + SPACING.lg }]}>
         <Text style={styles.notFoundText}>未找到该衣物</Text>
       </View>
     );
@@ -221,7 +223,8 @@ const ClothingDetailScreen = () => {
   // ============ 编辑模式 ============
   if (isEditMode) {
     return (
-      <ScrollView style={styles.container}>
+      <ScrollView style={[styles.container, { paddingBottom: insets.bottom + 80 }]}>
+        <View style={{ height: insets.top > 0 ? 0 : SPACING.md }} />
         {/* 图片选择 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>图片（{editImages.length}/9）</Text>
@@ -530,7 +533,8 @@ const ClothingDetailScreen = () => {
 
   // ============ 浏览模式 ============
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { paddingBottom: insets.bottom + 80 }]}>
+      <View style={{ height: insets.top > 0 ? 0 : SPACING.md }} />
       {/* 图片轮播 */}
       <View style={styles.imageSection}>
         <ScrollView

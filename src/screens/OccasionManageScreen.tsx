@@ -8,11 +8,13 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
 import { Occasion } from '../types';
 
 const OccasionManageScreen = () => {
+  const insets = useSafeAreaInsets();
   const { occasions, addOccasion, updateOccasion, deleteOccasion } = useStore();
   const [newName, setNewName] = useState('');
 
@@ -46,7 +48,8 @@ const OccasionManageScreen = () => {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top > 0 ? 0 : SPACING.md, paddingBottom: insets.bottom + 80 }]}>
+      <View style={{ height: insets.top }} />
       {/* 添加新场合 */}
       <View style={styles.addSection}>
         <TextInput

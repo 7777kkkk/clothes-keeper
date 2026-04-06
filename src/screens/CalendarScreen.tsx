@@ -5,12 +5,13 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
 
 const CalendarScreen = () => {
+  const insets = useSafeAreaInsets();
   const { calendarRecords, outfits, clothingItems } = useStore();
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
@@ -58,7 +59,7 @@ const CalendarScreen = () => {
     : [];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { paddingBottom: insets.bottom + 80 }]} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.title}>{currentMonth} 穿搭记录</Text>
       </View>

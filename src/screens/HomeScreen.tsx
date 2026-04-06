@@ -6,12 +6,13 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  SafeAreaView,
   Modal,
-  TextInput,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import LinearGradient from 'react-native-linear-gradient';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
 import { RootStackParamList, Season } from '../types';
@@ -20,7 +21,6 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const CARD_WIDTH = 90;
 const CARD_HEIGHT = 120;
-const CARD_GAP = 8;
 const SEASONS: Season[] = ['春', '夏', '秋', '冬'];
 
 type SortOption = {
@@ -36,6 +36,7 @@ const SORT_OPTIONS: SortOption[] = [
 ];
 
 const HomeScreen = () => {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const {
     clothingItems,
@@ -65,16 +66,12 @@ const HomeScreen = () => {
   // 自主模式：筛选和排序后的数据
   const filteredAndSortedItems = useMemo(() => {
     let items = [...clothingItems];
-
-    // 筛选
     if (homeFilterCategory) {
       items = items.filter(item => item.categoryId === homeFilterCategory);
     }
     if (homeFilterSeason) {
       items = items.filter(item => item.seasons.includes(homeFilterSeason));
     }
-
-    // 排序
     items.sort((a, b) => {
       let comparison = 0;
       switch (homeSortBy) {
@@ -98,7 +95,6 @@ const HomeScreen = () => {
       }
       return homeSortOrder === 'asc' ? comparison : -comparison;
     });
-
     return items;
   }, [clothingItems, homeFilterCategory, homeFilterSeason, homeSortBy, homeSortOrder]);
 
@@ -117,8 +113,8 @@ const HomeScreen = () => {
   };
 
   const getSortIcon = (key: string) => {
-    if (homeSortBy !== key) return '↕';
-    return homeSortOrder === 'asc' ? '↑' : '↓';
+    if (homeSortBy !== key) return 'sort';
+    return homeSortOrder === 'asc' ? 'sort-ascending' : 'sort-descending';
   };
 
   const getCategoryName = (categoryId: string) => {
@@ -129,42 +125,60 @@ const HomeScreen = () => {
   const isDefaultMode = homeMode === 'default';
   const isCustomMode = homeMode === 'custom';
 
-  // ============ 自主模式 ============
-  if (isCustomMode) {
-    return (
-      <SafeAreaView style={styles.container}>
-        {/* 顶部标题栏 */}
-        <View style={styles.header}>
-          <Text style={styles.title}>我的衣橱</Text>
-          <TouchableOpacity
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      {/* 顶部标题栏 */}
+      <View style={styles.header}>
+        <Text style={styles.title}>我的衣橱</Text>
+        {/* 渐变添加按钮 */}
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => navigation.navigate('AddClothing')}
+        >
+          <LinearGradient
+            colors={[COLORS.primary, COLORS.primary + 'DD']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
             style={styles.addButton}
-            onPress={() => navigation.navigate('AddClothing')}
           >
-            <Text style={styles.addButtonText}>+ 添加</Text>
-          </TouchableOpacity>
-        </View>
+            <Icon name="plus" size={18} color="#fff" />
+            <Text style={styles.addButtonText}>添加</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
 
-        {/* 模式切换 */}
-        <View style={styles.modeSwitchRow}>
-          <TouchableOpacity
-            style={[styles.modeBtn, isDefaultMode ? styles.modeBtnActive : null]}
-            onPress={() => setHomeMode('default')}
-          >
-            <Text style={[styles.modeBtnText, isDefaultMode ? styles.modeBtnTextActive : null]}>
-              默认模式
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.modeBtn, isCustomMode ? styles.modeBtnActive : null]}
-            onPress={() => setHomeMode('custom')}
-          >
-            <Text style={[styles.modeBtnText, isCustomMode ? styles.modeBtnTextActive : null]}>
-              自主模式
-            </Text>
-          </TouchableOpacity>
-        </View>
+      {/* 模式切换 */}
+      <View style={styles.modeSwitchRow}>
+        <TouchableOpacity
+          style={[styles.modeBtn, isDefaultMode && styles.modeBtnActive]}
+          onPress={() => setHomeMode('default')}
+        >
+          <Icon
+            name="view-grid"
+            size={16}
+            color={isDefaultMode ? '#fff' : COLORS.textSecondary}
+          />
+          <Text style={[styles.modeBtnText, isDefaultMode && styles.modeBtnTextActive]}>
+            默认
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.modeBtn, isCustomMode && styles.modeBtnActive]}
+          onPress={() => setHomeMode('custom')}
+        >
+          <Icon
+            name="filter-variant"
+            size={16}
+            color={isCustomMode ? '#fff' : COLORS.textSecondary}
+          />
+          <Text style={[styles.modeBtnText, isCustomMode && styles.modeBtnTextActive]}>
+            自主
+          </Text>
+        </TouchableOpacity>
+      </View>
 
-        {/* 筛选和排序工具栏 */}
+      {/* 自主模式工具栏 */}
+      {isCustomMode && (
         <View style={styles.toolbar}>
           <TouchableOpacity
             style={[styles.toolbarBtn, hasActiveFilters && styles.toolbarBtnActive]}
@@ -174,13 +188,17 @@ const HomeScreen = () => {
               setShowFilterModal(true);
             }}
           >
+            <Icon
+              name="filter-variant"
+              size={16}
+              color={hasActiveFilters ? '#fff' : COLORS.textSecondary}
+            />
             <Text style={[styles.toolbarBtnText, hasActiveFilters && styles.toolbarBtnTextActive]}>
-              {hasActiveFilters ? '✓ 筛选' : '筛选'}
+              {hasActiveFilters ? '已筛选' : '筛选'}
             </Text>
           </TouchableOpacity>
 
           <View style={styles.sortRow}>
-            <Text style={styles.sortLabel}>排序：</Text>
             {SORT_OPTIONS.map(option => (
               <TouchableOpacity
                 key={option.key}
@@ -188,39 +206,109 @@ const HomeScreen = () => {
                 onPress={() => handleSortPress(option.key)}
               >
                 <Text style={[styles.sortBtnText, homeSortBy === option.key && styles.sortBtnTextActive]}>
-                  {option.label} {getSortIcon(option.key)}
+                  {option.label}
                 </Text>
+                <Icon
+                  name={getSortIcon(option.key)}
+                  size={14}
+                  color={homeSortBy === option.key ? COLORS.primary : COLORS.textSecondary}
+                />
               </TouchableOpacity>
             ))}
           </View>
         </View>
+      )}
 
-        {/* 筛选标签 */}
-        {hasActiveFilters && (
-          <View style={styles.filterTags}>
-            {homeFilterCategory && (
-              <View style={styles.filterTag}>
-                <Text style={styles.filterTagText}>{getCategoryName(homeFilterCategory)}</Text>
-                <TouchableOpacity onPress={() => setHomeFilter(null, homeFilterSeason)}>
-                  <Text style={styles.filterTagRemove}>×</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-            {homeFilterSeason && (
-              <View style={styles.filterTag}>
-                <Text style={styles.filterTagText}>{homeFilterSeason}季</Text>
-                <TouchableOpacity onPress={() => setHomeFilter(homeFilterCategory, null)}>
-                  <Text style={styles.filterTagRemove}>×</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-        )}
+      {/* 筛选标签 */}
+      {hasActiveFilters && (
+        <View style={styles.filterTags}>
+          {homeFilterCategory && (
+            <View style={styles.filterTag}>
+              <Text style={styles.filterTagText}>{getCategoryName(homeFilterCategory)}</Text>
+              <TouchableOpacity onPress={() => setHomeFilter(null, homeFilterSeason)}>
+                <Icon name="close-circle" size={14} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          )}
+          {homeFilterSeason && (
+            <View style={styles.filterTag}>
+              <Text style={styles.filterTagText}>{homeFilterSeason}季</Text>
+              <TouchableOpacity onPress={() => setHomeFilter(homeFilterCategory, null)}>
+                <Icon name="close-circle" size={14} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      )}
 
-        {/* 商品列表 */}
+      {/* ========== 默认模式 ========== */}
+      {isDefaultMode && (
         <ScrollView
           style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 80 }]}
+          showsVerticalScrollIndicator={false}
+        >
+          {groupedData.length > 0 ? (
+            groupedData.map(({ category, items }) => (
+              <View key={category.id} style={styles.categorySection}>
+                <View style={styles.sectionHeader}>
+                  <View style={styles.sectionTitleRow}>
+                    <Text style={styles.sectionTitle}>{category.name}</Text>
+                    <View style={styles.sectionCountBadge}>
+                      <Text style={styles.sectionCount}>{items.length}</Text>
+                    </View>
+                  </View>
+                </View>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.cardsContainer}
+                >
+                  {items.map(item => (
+                    <TouchableOpacity
+                      key={item.id}
+                      style={styles.card}
+                      onPress={() =>
+                        navigation.navigate('ClothingDetail', { itemId: item.id })
+                      }
+                      activeOpacity={0.8}
+                    >
+                      <Image
+                        source={{ uri: item.images[0] }}
+                        style={styles.cardImage}
+                        resizeMode="cover"
+                      />
+                      {item.images.length > 1 && (
+                        <View style={styles.multiImageBadge}>
+                          <Text style={styles.multiImageText}>{item.images.length}</Text>
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <Icon name="wardrobe-outline" size={72} color={COLORS.border} />
+              <Text style={styles.emptyTitle}>衣橱空空如也</Text>
+              <Text style={styles.emptySubtitle}>添加你的第一件衣物</Text>
+              <TouchableOpacity
+                style={styles.emptyAddButton}
+                onPress={() => navigation.navigate('AddClothing')}
+              >
+                <Text style={styles.emptyAddButtonText}>+ 添加衣物</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </ScrollView>
+      )}
+
+      {/* ========== 自主模式 ========== */}
+      {isCustomMode && (
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 80 }]}
           showsVerticalScrollIndicator={false}
         >
           {filteredAndSortedItems.length > 0 ? (
@@ -255,197 +343,87 @@ const HomeScreen = () => {
             </View>
           ) : (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyEmoji}>👔</Text>
-              <Text style={styles.emptyTitle}>没有找到匹配的衣物</Text>
+              <Icon name="filter-outline" size={72} color={COLORS.border} />
+              <Text style={styles.emptyTitle}>没有找到</Text>
               <Text style={styles.emptySubtitle}>试试调整筛选条件</Text>
               <TouchableOpacity
-                style={styles.clearFilterBtn}
+                style={styles.emptyAddButton}
                 onPress={() => setHomeFilter(null, null)}
               >
-                <Text style={styles.clearFilterBtnText}>清除筛选</Text>
+                <Text style={styles.emptyAddButtonText}>清除筛选</Text>
               </TouchableOpacity>
             </View>
           )}
         </ScrollView>
+      )}
 
-        {/* 筛选弹窗 */}
-        <Modal visible={showFilterModal} transparent animationType="fade">
-          <View style={styles.modalOverlay}>
-            <View style={styles.filterModal}>
-              <Text style={styles.filterModalTitle}>筛选条件</Text>
+      {/* 筛选弹窗 */}
+      <Modal visible={showFilterModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.filterModal}>
+            <Text style={styles.filterModalTitle}>筛选条件</Text>
 
-              {/* 分类筛选 */}
-              <Text style={styles.filterSectionTitle}>按品类</Text>
-              <View style={styles.filterChipGroup}>
-                <TouchableOpacity
-                  style={[styles.filterChip, !tempFilterCategory && styles.filterChipActive]}
-                  onPress={() => setTempFilterCategory(null)}
-                >
-                  <Text style={[styles.filterChipText, !tempFilterCategory && styles.filterChipTextActive]}>
-                    全部
-                  </Text>
-                </TouchableOpacity>
-                {categories.map(cat => (
-                  <TouchableOpacity
-                    key={cat.id}
-                    style={[styles.filterChip, tempFilterCategory === cat.id && styles.filterChipActive]}
-                    onPress={() => setTempFilterCategory(cat.id)}
-                  >
-                    <Text style={[styles.filterChipText, tempFilterCategory === cat.id && styles.filterChipTextActive]}>
-                      {cat.name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              {/* 季节筛选 */}
-              <Text style={styles.filterSectionTitle}>按季节</Text>
-              <View style={styles.filterChipGroup}>
-                <TouchableOpacity
-                  style={[styles.filterChip, !tempFilterSeason && styles.filterChipActive]}
-                  onPress={() => setTempFilterSeason(null)}
-                >
-                  <Text style={[styles.filterChipText, !tempFilterSeason && styles.filterChipTextActive]}>
-                    全部
-                  </Text>
-                </TouchableOpacity>
-                {SEASONS.map(season => (
-                  <TouchableOpacity
-                    key={season}
-                    style={[styles.filterChip, tempFilterSeason === season && styles.filterChipActive]}
-                    onPress={() => setTempFilterSeason(season)}
-                  >
-                    <Text style={[styles.filterChipText, tempFilterSeason === season && styles.filterChipTextActive]}>
-                      {season}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              {/* 操作按钮 */}
-              <View style={styles.filterActions}>
-                <TouchableOpacity style={styles.filterClearBtn} onPress={handleClearFilter}>
-                  <Text style={styles.filterClearBtnText}>清除</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.filterApplyBtn} onPress={handleApplyFilter}>
-                  <Text style={styles.filterApplyBtnText}>应用</Text>
-                </TouchableOpacity>
-              </View>
-
+            <Text style={styles.filterSectionTitle}>按品类</Text>
+            <View style={styles.filterChipGroup}>
               <TouchableOpacity
-                style={styles.filterCloseBtn}
-                onPress={() => setShowFilterModal(false)}
+                style={[styles.filterChip, !tempFilterCategory && styles.filterChipActive]}
+                onPress={() => setTempFilterCategory(null)}
               >
-                <Text style={styles.filterCloseBtnText}>取消</Text>
+                <Text style={[styles.filterChipText, !tempFilterCategory && styles.filterChipTextActive]}>
+                  全部
+                </Text>
+              </TouchableOpacity>
+              {categories.map(cat => (
+                <TouchableOpacity
+                  key={cat.id}
+                  style={[styles.filterChip, tempFilterCategory === cat.id && styles.filterChipActive]}
+                  onPress={() => setTempFilterCategory(cat.id)}
+                >
+                  <Text style={[styles.filterChipText, tempFilterCategory === cat.id && styles.filterChipTextActive]}>
+                    {cat.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={styles.filterSectionTitle}>按季节</Text>
+            <View style={styles.filterChipGroup}>
+              <TouchableOpacity
+                style={[styles.filterChip, !tempFilterSeason && styles.filterChipActive]}
+                onPress={() => setTempFilterSeason(null)}
+              >
+                <Text style={[styles.filterChipText, !tempFilterSeason && styles.filterChipTextActive]}>
+                  全部
+                </Text>
+              </TouchableOpacity>
+              {SEASONS.map(season => (
+                <TouchableOpacity
+                  key={season}
+                  style={[styles.filterChip, tempFilterSeason === season && styles.filterChipActive]}
+                  onPress={() => setTempFilterSeason(season)}
+                >
+                  <Text style={[styles.filterChipText, tempFilterSeason === season && styles.filterChipTextActive]}>
+                    {season}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <View style={styles.filterActions}>
+              <TouchableOpacity style={styles.filterClearBtn} onPress={handleClearFilter}>
+                <Text style={styles.filterClearBtnText}>清除</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.filterApplyBtn} onPress={handleApplyFilter}>
+                <Text style={styles.filterApplyBtnText}>应用</Text>
               </TouchableOpacity>
             </View>
-          </View>
-        </Modal>
-      </SafeAreaView>
-    );
-  }
 
-  // ============ 默认模式 ============
-  return (
-    <SafeAreaView style={styles.container}>
-      {/* 顶部标题栏 */}
-      <View style={styles.header}>
-        <Text style={styles.title}>我的衣橱</Text>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => navigation.navigate('AddClothing')}
-        >
-          <Text style={styles.addButtonText}>+ 添加</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* 模式切换 */}
-      <View style={styles.modeSwitchRow}>
-        <TouchableOpacity
-          style={[styles.modeBtn, isDefaultMode ? styles.modeBtnActive : null]}
-          onPress={() => setHomeMode('default')}
-        >
-          <Text style={[styles.modeBtnText, isDefaultMode ? styles.modeBtnTextActive : null]}>
-            默认模式
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.modeBtn, isCustomMode ? styles.modeBtnActive : null]}
-          onPress={() => setHomeMode('custom')}
-        >
-          <Text style={[styles.modeBtnText, isCustomMode ? styles.modeBtnTextActive : null]}>
-            自主模式
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* 垂直滚动的所有分类模块 */}
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {groupedData.length > 0 ? (
-          groupedData.map(({ category, items }) => (
-            <View key={category.id} style={styles.categorySection}>
-              {/* 模块头部 */}
-              <View style={styles.sectionHeader}>
-                <View style={styles.sectionTitleRow}>
-                  <Text style={styles.sectionTitle}>{category.name}</Text>
-                  <Text style={styles.sectionCount}>
-                    {items.length} 个
-                  </Text>
-                </View>
-              </View>
-
-              {/* 横向滚动的单品卡片 */}
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.cardsContainer}
-              >
-                {items.map(item => (
-                  <TouchableOpacity
-                    key={item.id}
-                    style={styles.card}
-                    onPress={() =>
-                      navigation.navigate('ClothingDetail', { itemId: item.id })
-                    }
-                    activeOpacity={0.8}
-                  >
-                    <Image
-                      source={{ uri: item.images[0] }}
-                      style={styles.cardImage}
-                      resizeMode="cover"
-                    />
-                    {item.images.length > 1 && (
-                      <View style={styles.multiImageBadge}>
-                        <Text style={styles.multiImageText}>
-                          {item.images.length}
-                        </Text>
-                      </View>
-                    )}
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-          ))
-        ) : (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>👔</Text>
-            <Text style={styles.emptyTitle}>衣橱空空如也</Text>
-            <Text style={styles.emptySubtitle}>
-              添加你的第一件衣物开始管理
-            </Text>
-            <TouchableOpacity
-              style={styles.emptyAddButton}
-              onPress={() => navigation.navigate('AddClothing')}
-            >
-              <Text style={styles.emptyAddButtonText}>+ 添加衣物</Text>
+            <TouchableOpacity style={styles.filterCloseBtn} onPress={() => setShowFilterModal(false)}>
+              <Text style={styles.filterCloseBtnText}>取消</Text>
             </TouchableOpacity>
           </View>
-        )}
-      </ScrollView>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -466,64 +444,74 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: FONT_SIZES.xxl,
-    fontWeight: 'bold',
+    fontWeight: '800',
     color: COLORS.textPrimary,
+    letterSpacing: -0.5,
   },
   addButton: {
-    backgroundColor: COLORS.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.sm,
-    borderRadius: BORDER_RADIUS.sm,
+    paddingVertical: SPACING.sm + 2,
+    borderRadius: BORDER_RADIUS.full,
+    gap: 4,
+    ...SHADOWS.card,
   },
   addButtonText: {
     color: '#fff',
-    fontWeight: '600',
+    fontWeight: '700',
     fontSize: FONT_SIZES.sm,
   },
   // 模式切换
   modeSwitchRow: {
     flexDirection: 'row',
-    padding: SPACING.md,
-    gap: SPACING.sm,
-    backgroundColor: COLORS.card,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.md,
+    padding: 4,
+    backgroundColor: COLORS.secondary,
+    borderRadius: BORDER_RADIUS.md,
+    gap: 4,
   },
   modeBtn: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: SPACING.sm,
     borderRadius: BORDER_RADIUS.sm,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    alignItems: 'center',
+    gap: 6,
   },
   modeBtnActive: {
     backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    ...SHADOWS.card,
   },
   modeBtnText: {
     fontSize: FONT_SIZES.sm,
     color: COLORS.textSecondary,
+    fontWeight: '600',
   },
   modeBtnTextActive: {
     color: '#fff',
-    fontWeight: '600',
   },
   // 工具栏（自主模式）
   toolbar: {
-    padding: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
     backgroundColor: COLORS.card,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
+    gap: SPACING.sm,
   },
   toolbarBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
-    borderRadius: BORDER_RADIUS.sm,
+    borderRadius: BORDER_RADIUS.full,
     borderWidth: 1,
     borderColor: COLORS.border,
     alignSelf: 'flex-start',
-    marginBottom: SPACING.sm,
+    gap: 4,
   },
   toolbarBtnActive: {
     backgroundColor: COLORS.primary,
@@ -532,43 +520,42 @@ const styles = StyleSheet.create({
   toolbarBtnText: {
     fontSize: FONT_SIZES.sm,
     color: COLORS.textSecondary,
+    fontWeight: '500',
   },
   toolbarBtnTextActive: {
     color: '#fff',
   },
   sortRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     flexWrap: 'wrap',
     gap: SPACING.xs,
   },
-  sortLabel: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
-    marginRight: SPACING.xs,
-  },
   sortBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: SPACING.sm,
     paddingVertical: SPACING.xs,
     borderRadius: BORDER_RADIUS.sm,
+    gap: 2,
   },
   sortBtnActive: {
-    backgroundColor: COLORS.secondary,
+    backgroundColor: COLORS.primary + '12',
   },
   sortBtnText: {
     fontSize: FONT_SIZES.xs,
     color: COLORS.textSecondary,
+    fontWeight: '500',
   },
   sortBtnTextActive: {
     color: COLORS.primary,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   // 筛选标签
   filterTags: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: SPACING.sm,
-    paddingHorizontal: SPACING.md,
+    paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.sm,
     backgroundColor: COLORS.card,
   },
@@ -576,26 +563,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.primary,
-    paddingHorizontal: SPACING.sm,
+    paddingLeft: SPACING.md,
+    paddingRight: SPACING.xs,
     paddingVertical: SPACING.xs,
     borderRadius: BORDER_RADIUS.full,
-    gap: SPACING.xs,
+    gap: 4,
   },
   filterTagText: {
     fontSize: FONT_SIZES.xs,
     color: '#fff',
-  },
-  filterTagRemove: {
-    fontSize: FONT_SIZES.sm,
-    color: '#fff',
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
   // 滚动区域
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingVertical: SPACING.md,
+    paddingTop: SPACING.md,
   },
   // 默认模式分类模块
   categorySection: {
@@ -610,26 +594,33 @@ const styles = StyleSheet.create({
   },
   sectionTitleRow: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    alignItems: 'center',
     gap: SPACING.sm,
   },
   sectionTitle: {
     fontSize: FONT_SIZES.lg,
-    fontWeight: 'bold',
+    fontWeight: '700',
     color: COLORS.textPrimary,
   },
+  sectionCountBadge: {
+    backgroundColor: COLORS.secondary,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 2,
+    borderRadius: BORDER_RADIUS.full,
+  },
   sectionCount: {
-    fontSize: FONT_SIZES.sm,
+    fontSize: FONT_SIZES.xs,
     color: COLORS.textSecondary,
+    fontWeight: '600',
   },
   cardsContainer: {
     paddingHorizontal: SPACING.lg,
-    gap: CARD_GAP,
+    gap: SPACING.sm,
   },
   card: {
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
-    borderRadius: BORDER_RADIUS.sm,
+    borderRadius: BORDER_RADIUS.md,
     overflow: 'hidden',
     backgroundColor: COLORS.secondary,
     ...SHADOWS.card,
@@ -642,7 +633,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 4,
     right: 4,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.55)',
     borderRadius: 8,
     paddingHorizontal: 5,
     paddingVertical: 2,
@@ -656,12 +647,12 @@ const styles = StyleSheet.create({
   gridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    padding: SPACING.md,
+    paddingHorizontal: SPACING.md,
     gap: SPACING.md,
   },
   gridCard: {
     width: '47%',
-    borderRadius: BORDER_RADIUS.sm,
+    borderRadius: BORDER_RADIUS.md,
     overflow: 'hidden',
     backgroundColor: COLORS.card,
     ...SHADOWS.card,
@@ -678,7 +669,7 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.sm,
     fontWeight: '600',
     color: COLORS.textPrimary,
-    marginBottom: SPACING.xs,
+    marginBottom: 2,
   },
   gridCardMeta: {
     fontSize: FONT_SIZES.xs,
@@ -686,20 +677,15 @@ const styles = StyleSheet.create({
   },
   // 空状态
   emptyState: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 120,
-  },
-  emptyEmoji: {
-    fontSize: 64,
-    marginBottom: SPACING.lg,
+    paddingTop: 100,
   },
   emptyTitle: {
     fontSize: FONT_SIZES.xl,
     fontWeight: 'bold',
     color: COLORS.textPrimary,
-    marginBottom: SPACING.sm,
+    marginTop: SPACING.lg,
+    marginBottom: SPACING.xs,
   },
   emptySubtitle: {
     fontSize: FONT_SIZES.md,
@@ -711,21 +697,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.xl,
     paddingVertical: SPACING.md,
     borderRadius: BORDER_RADIUS.md,
+    ...SHADOWS.card,
   },
   emptyAddButtonText: {
     color: '#fff',
-    fontWeight: '600',
-    fontSize: FONT_SIZES.md,
-  },
-  clearFilterBtn: {
-    backgroundColor: COLORS.secondary,
-    paddingHorizontal: SPACING.xl,
-    paddingVertical: SPACING.md,
-    borderRadius: BORDER_RADIUS.md,
-  },
-  clearFilterBtnText: {
-    color: COLORS.textPrimary,
-    fontWeight: '600',
+    fontWeight: '700',
     fontSize: FONT_SIZES.md,
   },
   // 筛选弹窗
@@ -738,12 +714,12 @@ const styles = StyleSheet.create({
   filterModal: {
     width: 320,
     backgroundColor: COLORS.card,
-    borderRadius: BORDER_RADIUS.md,
-    padding: SPACING.lg,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.xl,
   },
   filterModalTitle: {
     fontSize: FONT_SIZES.lg,
-    fontWeight: 'bold',
+    fontWeight: '700',
     color: COLORS.textPrimary,
     textAlign: 'center',
     marginBottom: SPACING.lg,
@@ -764,7 +740,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
     borderRadius: BORDER_RADIUS.full,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.secondary,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
@@ -775,6 +751,7 @@ const styles = StyleSheet.create({
   filterChipText: {
     fontSize: FONT_SIZES.sm,
     color: COLORS.textSecondary,
+    fontWeight: '500',
   },
   filterChipTextActive: {
     color: '#fff',
@@ -795,6 +772,7 @@ const styles = StyleSheet.create({
   filterClearBtnText: {
     fontSize: FONT_SIZES.md,
     color: COLORS.textSecondary,
+    fontWeight: '600',
   },
   filterApplyBtn: {
     flex: 1,
@@ -802,11 +780,12 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.sm,
     backgroundColor: COLORS.primary,
     alignItems: 'center',
+    ...SHADOWS.card,
   },
   filterApplyBtnText: {
     fontSize: FONT_SIZES.md,
     color: '#fff',
-    fontWeight: '600',
+    fontWeight: '700',
   },
   filterCloseBtn: {
     marginTop: SPACING.md,

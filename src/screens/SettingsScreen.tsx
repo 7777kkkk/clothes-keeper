@@ -4,9 +4,9 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
@@ -15,6 +15,7 @@ import { RootStackParamList } from '../types';
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const SettingsScreen = () => {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
 
   const menuItems = [
@@ -38,7 +39,7 @@ const SettingsScreen = () => {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { paddingBottom: insets.bottom + 80 }]} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.title}>我的</Text>
       </View>

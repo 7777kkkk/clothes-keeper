@@ -3,13 +3,17 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
+import { Season } from '../types';
+
+const SEASONS: Season[] = ['春', '夏', '秋', '冬'];
 
 const StatsScreen = () => {
+  const insets = useSafeAreaInsets();
   const { clothingItems, outfits, calendarRecords, categories } = useStore();
 
   // 统计数据
@@ -24,13 +28,13 @@ const StatsScreen = () => {
   })).filter(s => s.count > 0);
 
   // 季节分布
-  const seasonStats = ['春', '夏', '秋', '冬'].map(season => ({
+  const seasonStats = SEASONS.map(season => ({
     season,
     count: clothingItems.filter(item => item.seasons.includes(season)).length,
   })).filter(s => s.count > 0);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { paddingBottom: insets.bottom + 80 }]} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.title}>穿搭统计</Text>
       </View>
