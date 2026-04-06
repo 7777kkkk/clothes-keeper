@@ -1,0 +1,32 @@
+name: Push Notification
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get commit info
+        id: commit
+        run: |
+          echo "message=${{ github.event.head_commit.message }}" >> $GITHUB_OUTPUT
+          echo "author=${{ github.event.head_commit.author.name }}" >> $GITHUB_OUTPUT
+
+      - name: Commit summary
+        run: |
+          echo "📦 ClothesKeeper 更新"
+          echo "分支: ${{ github.ref_name }}"
+          echo "作者: ${{ steps.commit.outputs.author }}"
+          echo "提交信息: ${{ steps.commit.outputs.message }}"
+
+      # 通知相关配置（需用户自行配置）
+      # 方法1: 通过 GitHub App 通知 (需要安装 GitHub App)
+      # 方法2: 通过飞书 Webhook（需配置 FEISHU_WEBHOOK）
+      # 方法3: 通过邮件 (需配置 SMTP)
