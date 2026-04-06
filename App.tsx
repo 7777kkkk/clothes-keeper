@@ -1,23 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { StatusBar, View, Text, ActivityIndicator, StyleSheet, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { PaperProvider, MD3LightTheme } from 'react-native-paper';
+import { PaperProvider, MD3DarkTheme } from 'react-native-paper';
 import AppNavigator from './src/navigation/AppNavigator';
 import { useStore } from './src/store/useStore';
 import { COLORS } from './src/constants/theme';
 
-// 自定义 Paper 主题（与 App 配色一致）
+// 深色玻璃主题
 const paperTheme = {
-  ...MD3LightTheme,
+  ...MD3DarkTheme,
   colors: {
-    ...MD3LightTheme.colors,
+    ...MD3DarkTheme.colors,
     primary: COLORS.primary,
-    secondary: COLORS.secondary,
+    secondary: COLORS.accent,
     background: COLORS.background,
-    surface: COLORS.card,
+    surface: COLORS.glass,
+    surfaceVariant: COLORS.glassLight,
     error: COLORS.error,
-    onPrimary: '#ffffff',
+    onPrimary: '#fff',
     outline: COLORS.border,
+    onSurface: COLORS.textPrimary,
+    onSurfaceVariant: COLORS.textSecondary,
   },
 };
 
@@ -49,11 +52,10 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <PaperProvider theme={paperTheme}>
-        {/* translucent=false 确保内容不被状态栏遮挡 */}
         <StatusBar
-          barStyle="dark-content"
-          backgroundColor={Platform.OS === 'android' ? COLORS.card : undefined}
-          translucent={false}
+          barStyle="light-content"
+          backgroundColor="transparent"
+          translucent
         />
         <AppContent />
       </PaperProvider>

@@ -1,12 +1,11 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { View, Text, StyleSheet, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { RootTabParamList, RootStackParamList } from '../types';
-import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../constants/theme';
+import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
 
 // Screens
 import HomeScreen from '../screens/HomeScreen';
@@ -32,7 +31,22 @@ const TAB_ICONS: Record<string, { active: string; inactive: string }> = {
   My: { active: 'account-circle', inactive: 'account-circle-outline' },
 };
 
-// 自定义 Tab Bar（已包含 SafeArea.bottom）
+// 深色玻璃导航主题
+const DarkTheme = {
+  ...DefaultTheme,
+  dark: true,
+  colors: {
+    ...DefaultTheme.colors,
+    primary: COLORS.primary,
+    background: COLORS.background,
+    card: COLORS.tabBar,
+    text: COLORS.textPrimary,
+    border: COLORS.glassBorder,
+    notification: COLORS.primary,
+  },
+};
+
+// 自定义 Tab Bar（玻璃拟态）
 const CustomTabBar = ({ state, descriptors, navigation }: any) => {
   return (
     <View style={styles.tabBarOuter}>
@@ -56,25 +70,15 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
 
           return (
             <View key={route.key} style={styles.tabItem}>
-              <View
-                style={[
-                  styles.tabButton,
-                  isFocused && styles.tabButtonFocused,
-                ]}
-              >
+              <View style={[styles.tabButton, isFocused && styles.tabButtonFocused]}>
                 <Icon
                   name={isFocused ? icon.active : icon.inactive}
                   size={26}
-                  color={isFocused ? COLORS.primary : COLORS.textSecondary}
+                  color={isFocused ? COLORS.primary : COLORS.textMuted}
                   onPress={onPress}
                 />
               </View>
-              <Text
-                style={[
-                  styles.tabLabel,
-                  isFocused && styles.tabLabelFocused,
-                ]}
-              >
+              <Text style={[styles.tabLabel, isFocused && styles.tabLabelFocused]}>
                 {label}
               </Text>
             </View>
@@ -92,9 +96,7 @@ const MainTabs = () => {
   return (
     <Tab.Navigator
       tabBar={(props) => <CustomTabBar {...props} />}
-      screenOptions={{
-        headerShown: false,
-      }}
+      screenOptions={{ headerShown: false }}
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ title: '衣橱' }} />
       <Tab.Screen name="Outfit" component={OutfitScreen} options={{ title: '搭配' }} />
@@ -107,22 +109,18 @@ const MainTabs = () => {
 
 // 通用 Stack 屏幕配置
 const screenOptions = {
-  headerStyle: {
-    backgroundColor: COLORS.card,
-  },
+  headerStyle: { backgroundColor: COLORS.glass },
   headerTintColor: COLORS.textPrimary,
-  headerTitleStyle: {
-    fontWeight: '600' as const,
-    fontSize: FONT_SIZES.lg,
-  },
-  headerShadowVisible: true,
+  headerTitleStyle: { fontWeight: '600' as const, fontSize: FONT_SIZES.lg },
+  headerShadowVisible: false,
   headerBackTitleVisible: false,
+  contentStyle: { backgroundColor: COLORS.background },
 };
 
 // 根 Stack
 const AppNavigator = () => {
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={DarkTheme}>
       <Stack.Navigator screenOptions={screenOptions}>
         <Stack.Screen
           name="MainTabs"
@@ -161,18 +159,10 @@ const AppNavigator = () => {
 
 const styles = StyleSheet.create({
   tabBarOuter: {
-    backgroundColor: COLORS.card,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -3 },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
-      },
-      android: {
-        elevation: 12,
-      },
-    }),
+    backgroundColor: COLORS.tabBar,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.tabBarBorder,
+    ...SHADOWS.tabBar,
   },
   tabBar: {
     flexDirection: 'row',
@@ -186,17 +176,18 @@ const styles = StyleSheet.create({
   },
   tabButton: {
     width: 48,
-    height: 36,
+    height: 34,
     borderRadius: BORDER_RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'transparent',
   },
   tabButtonFocused: {
-    backgroundColor: COLORS.primary + '18',
+    backgroundColor: COLORS.primarySoft,
   },
   tabLabel: {
-    fontSize: 11,
-    color: COLORS.textSecondary,
+    fontSize: 10,
+    color: COLORS.textMuted,
     marginTop: 3,
     fontWeight: '500',
   },
@@ -206,7 +197,7 @@ const styles = StyleSheet.create({
   },
   homeIndicator: {
     height: 34,
-    backgroundColor: COLORS.card,
+    backgroundColor: COLORS.tabBar,
   },
 });
 
