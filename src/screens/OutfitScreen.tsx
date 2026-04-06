@@ -1,226 +1,171 @@
+/**
+ * OutfitScreen — 搭配列表页
+ * 深色玻璃拟态，白色文字
+ */
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  Image,
+  View, Text, StyleSheet, FlatList, TouchableOpacity, Image,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
+import { GlassCard, GlassPill, FAB, EmptyState } from '../components/glass/GlassComponents';
 import { RootStackParamList, Outfit } from '../types';
-
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const OutfitScreen = () => {
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation<NavigationProp>();
+  const nav = useNavigation<any>();
   const { outfits, occasions, clothingItems } = useStore();
   const [selectedOccasion, setSelectedOccasion] = useState<string | null>(null);
 
-  const filteredOutfits = outfits.filter(outfit =>
-    !selectedOccasion || outfit.occasions.includes(selectedOccasion)
+  const filtered = outfits.filter(o =>
+    !selectedOccasion || o.occasions.includes(selectedOccasion)
   );
 
-  const getOutfitItems = (itemIds: string[]) => {
-    return clothingItems.filter(c => itemIds.includes(c.id));
-  };
-
   const renderOutfit = ({ item }: { item: Outfit }) => {
-    const items = getOutfitItems(item.itemIds);
+    const items = item.itemIds
+      .map(id => clothingItems.find(c => c.id === id))
+      .filter(Boolean);
+
     return (
-      <TouchableOpacity
-        style={styles.outfitCard}
-        onPress={() => navigation.navigate('CreateOutfit', { outfitId: item.id })}
+      <GlassCard
+        style={outfitStyles.outfitCard}
+        padding="md"
+        onPress={() => nav.navigate('CreateOutfit', { outfitId: item.id })}
       >
-        <View style={styles.outfitCover}>
-          {items.slice(0, 4).map((c, i) => (
+        {/* 搭配封面 */}
+        <View style={outfitStyles.coverRow}>
+          {items.slice(0, 4).map((c: any, i: number) => (
             <Image
               key={c.id}
               source={{ uri: c.images[0] }}
               style={[
-                styles.outfitThumb,
-                { position: 'absolute', left: i * 45, zIndex: 4 - i },
+                outfitStyles.thumb,
+                { position: 'absolute', left: i * 38, zIndex: 4 - i },
               ]}
+              resizeMode="cover"
             />
           ))}
+          {items.length === 0 && (
+            <View style={[outfitStyles.thumb, { backgroundColor: COLORS.glassLight }]}>
+              <Icon name="hanger" size={20} color={COLORS.textMuted} />
+            </View>
+          )}
         </View>
-        <View style={styles.outfitInfo}>
-          <Text style={styles.outfitName}>{item.name}</Text>
-          <Text style={styles.outfitOccasions}>
-            {item.occasions.map(id => occasions.find(o => o.id === id)?.name).join(', ')}
+        {/* 信息 */}
+        <View style={outfitStyles.outfitInfo}>
+          <Text style={outfitStyles.outfitName} numberOfLines={1}>{item.name}</Text>
+          <Text style={outfitStyles.outfitOccasion}>
+            {item.occasions
+              .map((id: string) => occasions.find((o: any) => o.id === id)?.name)
+              .filter(Boolean)
+              .join(' · ') || '未分类'}
           </Text>
         </View>
-      </TouchableOpacity>
+      </GlassCard>
     );
   };
 
   return (
-    <SafeAreaView style={[styles.container, { paddingBottom: insets.bottom + 80 }]} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={styles.title}>我的搭配</Text>
+    <SafeAreaView style={outfitStyles.container} edges={['top']}>
+      {/* Top Nav */}
+      <View style={outfitStyles.topNav}>
+        <Text style={outfitStyles.topNavTitle}>我的搭配</Text>
         <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => navigation.navigate('CreateOutfit', {})}
+          activeOpacity={0.75}
+          onPress={() => nav.navigate('CreateOutfit', {})}
+          style={outfitStyles.addBtn}
         >
-          <Text style={styles.addButtonText}>+ 新建</Text>
+          <Icon name="plus" size={20} color={COLORS.primary} />
         </TouchableOpacity>
       </View>
 
       {/* 场合筛选 */}
-      <View style={styles.filterContainer}>
-        <TouchableOpacity
-          style={[styles.filterChip, !selectedOccasion && styles.filterChipActive]}
+      <View style={outfitStyles.filterRow}>
+        <GlassPill
+          label="全部"
+          active={!selectedOccasion}
           onPress={() => setSelectedOccasion(null)}
-        >
-          <Text style={[styles.filterText, !selectedOccasion && styles.filterTextActive]}>
-            全部
-          </Text>
-        </TouchableOpacity>
-        {occasions.map(occ => (
-          <TouchableOpacity
+        />
+        {occasions.map((occ: any) => (
+          <GlassPill
             key={occ.id}
-            style={[styles.filterChip, selectedOccasion === occ.id && styles.filterChipActive]}
+            label={occ.name}
+            active={selectedOccasion === occ.id}
             onPress={() => setSelectedOccasion(occ.id)}
-          >
-            <Text style={[styles.filterText, selectedOccasion === occ.id && styles.filterTextActive]}>
-              {occ.name}
-            </Text>
-          </TouchableOpacity>
+          />
         ))}
       </View>
 
+      {/* 列表 */}
       <FlatList
-        data={filteredOutfits}
+        data={filtered}
         renderItem={renderOutfit}
         keyExtractor={item => item.id}
-        contentContainerStyle={styles.list}
+        numColumns={2}
+        columnWrapperStyle={outfitStyles.listRow}
+        contentContainerStyle={[outfitStyles.listContent, { paddingBottom: insets.bottom + 90 }]}
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <Text style={styles.emptyText}>还没有搭配</Text>
-            <Text style={styles.emptySubtext}>点击右上角创建你的第一套搭配</Text>
-          </View>
+          <EmptyState
+            icon="tshirt-crew-outline"
+            title="还没有搭配"
+            subtitle="创建第一个穿搭方案"
+            actionLabel="新建搭配"
+            onAction={() => nav.navigate('CreateOutfit', {})}
+          />
         }
+      />
+
+      {/* FAB */}
+      <FAB
+        icon="plus" onPress={() => nav.navigate('CreateOutfit', {})}
+        style={{ bottom: insets.bottom + 84 }}
       />
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
+const outfitStyles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: COLORS.background },
+  topNav: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: SPACING.xl, paddingVertical: SPACING.sm,
+    backgroundColor: COLORS.glass,
+    borderBottomWidth: 1, borderBottomColor: COLORS.border,
+    gap: SPACING.md,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
-    backgroundColor: COLORS.card,
+  topNavTitle: {
+    flex: 1, textAlign: 'center',
+    fontSize: FONT_SIZES.xxl, fontWeight: '800',
+    color: COLORS.textPrimary, letterSpacing: -0.5,
   },
-  title: {
-    fontSize: FONT_SIZES.xxl,
-    fontWeight: 'bold',
-    color: COLORS.textPrimary,
+  addBtn: {
+    width: 38, height: 38, borderRadius: BORDER_RADIUS.md,
+    backgroundColor: COLORS.primarySoft,
+    justifyContent: 'center', alignItems: 'center',
   },
-  addButton: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.sm,
-    borderRadius: BORDER_RADIUS.sm,
+  filterRow: {
+    flexDirection: 'row', flexWrap: 'wrap',
+    padding: SPACING.lg, gap: SPACING.sm,
   },
-  addButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: FONT_SIZES.sm,
-  },
-  filterContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.sm,
-    backgroundColor: COLORS.card,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-    flexWrap: 'wrap',
-    gap: SPACING.sm,
-  },
-  filterChip: {
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs,
-    borderRadius: BORDER_RADIUS.full,
-    backgroundColor: COLORS.background,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  filterChipActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
-  },
-  filterText: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
-  },
-  filterTextActive: {
-    color: '#fff',
-  },
-  list: {
-    padding: SPACING.md,
-  },
-  outfitCard: {
-    flexDirection: 'row',
-    backgroundColor: COLORS.card,
-    borderRadius: BORDER_RADIUS.md,
-    marginBottom: SPACING.md,
-    padding: SPACING.md,
-    ...SHADOWS.card,
-  },
-  outfitCover: {
-    width: 140,
-    height: 80,
-    position: 'relative',
-  },
-  outfitThumb: {
-    width: 50,
-    height: 70,
-    borderRadius: BORDER_RADIUS.sm,
-    backgroundColor: COLORS.secondary,
-  },
-  outfitInfo: {
-    flex: 1,
-    marginLeft: SPACING.md,
-    justifyContent: 'center',
-  },
-  outfitName: {
-    fontSize: FONT_SIZES.md,
-    fontWeight: '600',
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.xs,
-  },
-  outfitOccasions: {
-    fontSize: FONT_SIZES.xs,
-    color: COLORS.textSecondary,
-  },
-  empty: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: 100,
-  },
-  emptyText: {
-    fontSize: FONT_SIZES.lg,
-    color: COLORS.textSecondary,
+  listContent: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.sm },
+  listRow: { justifyContent: 'space-between', marginBottom: SPACING.md },
+  outfitCard: { width: '48%' },
+  coverRow: {
+    height: 90, position: 'relative',
+    borderRadius: BORDER_RADIUS.md, overflow: 'hidden',
     marginBottom: SPACING.sm,
   },
-  emptySubtext: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
+  thumb: {
+    width: 80, height: 90,
+    backgroundColor: COLORS.glassLight,
+    borderRadius: BORDER_RADIUS.md,
   },
+  outfitInfo: {},
+  outfitName: { fontSize: FONT_SIZES.sm, fontWeight: '600', color: COLORS.textPrimary },
+  outfitOccasion: { fontSize: FONT_SIZES.xs, color: COLORS.textSecondary, marginTop: 2 },
 });
 
 export default OutfitScreen;

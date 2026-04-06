@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   },
   section: {
     padding: SPACING.lg,
-    backgroundColor: COLORS.card,
+    backgroundColor: COLORS.glass,
     marginBottom: SPACING.sm,
   },
   label: {
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
   itemImage: {
     width: '100%',
     height: '100%',
-    backgroundColor: COLORS.secondary,
+    backgroundColor: COLORS.glassLight,
   },
   checkmark: {
     position: 'absolute',

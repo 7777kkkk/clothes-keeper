@@ -1,237 +1,196 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-} from 'react-native';
+/**
+ * StatsScreen — 统计页面
+ * 深色玻璃拟态，白色文字
+ */
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
+import { GlassCard, GlassPill } from '../components/glass/GlassComponents';
 import { Season } from '../types';
 
 const SEASONS: Season[] = ['春', '夏', '秋', '冬'];
 
+// ============================================================
+//  StatCard
+// ============================================================
+const StatCard = ({
+  v, l, icon, color,
+}: {
+  v: string | number; l: string; icon: string; color: string;
+}) => (
+  <View style={statsStyles.statCard}>
+    <View style={[statsStyles.statIconBg, { backgroundColor: color + '18' }]}>
+      <Icon name={icon} size={20} color={color} />
+    </View>
+    <Text style={[statsStyles.statVal, { color }]}>{v}</Text>
+    <Text style={statsStyles.statLbl}>{l}</Text>
+  </View>
+);
+
+// ============================================================
+//  StatsScreen
+// ============================================================
 const StatsScreen = () => {
   const insets = useSafeAreaInsets();
   const { clothingItems, outfits, calendarRecords, categories } = useStore();
 
-  // 统计数据
-  const totalItems = clothingItems.length;
-  const totalOutfits = outfits.length;
-  const totalRecords = calendarRecords.length;
-
-  // 品类分布
-  const categoryStats = categories.map(cat => ({
-    name: cat.name,
-    count: clothingItems.filter(item => item.categoryId === cat.id).length,
-  })).filter(s => s.count > 0);
-
-  // 季节分布
-  const seasonStats = SEASONS.map(season => ({
-    season,
-    count: clothingItems.filter(item => item.seasons.includes(season)).length,
-  })).filter(s => s.count > 0);
+  const stats = useMemo(() => {
+    const totalVal = clothingItems.reduce((s, i) => s + (i.price || 0), 0);
+    const seasonStats = SEASONS.map(s => ({
+      season: s,
+      cnt: clothingItems.filter(i => i.seasons.includes(s)).length,
+    })).filter(s => s.cnt > 0);
+    const catStats = categories.map(c => ({
+      name: c.name,
+      cnt: clothingItems.filter(i => i.categoryId === c.id).length,
+    })).filter(s => s.cnt > 0);
+    const maxCnt = Math.max(...seasonStats.map(s => s.cnt), ...catStats.map(s => s.cnt), 1);
+    return { totalVal, seasonStats, catStats, maxCnt };
+  }, [clothingItems, categories]);
 
   return (
-    <SafeAreaView style={[styles.container, { paddingBottom: insets.bottom + 80 }]} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={styles.title}>穿搭统计</Text>
+    <SafeAreaView style={statsStyles.container} edges={['top']}>
+      <View style={statsStyles.topNav}>
+        <Text style={statsStyles.topNavTitle}>穿搭统计</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
-        {/* 总体概览 */}
-        <View style={styles.overviewRow}>
-          <View style={[styles.statCard, { backgroundColor: '#E8F5E9' }]}>
-            <Text style={styles.statNumber}>{totalItems}</Text>
-            <Text style={styles.statLabel}>衣物总数</Text>
-          </View>
-          <View style={[styles.statCard, { backgroundColor: '#E3F2FD' }]}>
-            <Text style={styles.statNumber}>{totalOutfits}</Text>
-            <Text style={styles.statLabel}>搭配数量</Text>
-          </View>
-          <View style={[styles.statCard, { backgroundColor: '#FFF3E0' }]}>
-            <Text style={styles.statNumber}>{totalRecords}</Text>
-            <Text style={styles.statLabel}>穿搭记录</Text>
-          </View>
+      <ScrollView
+        style={statsStyles.mainScroll}
+        contentContainerStyle={[statsStyles.mainContent, { paddingBottom: insets.bottom + 90 }]}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* 统计卡片网格 */}
+        <View style={statsStyles.statsGrid}>
+          <StatCard v={clothingItems.length} l="单品" icon="wardrobe" color={COLORS.primary} />
+          <StatCard v={outfits.length} l="搭配" icon="tshirt-crew" color={COLORS.accent} />
+          <StatCard v={calendarRecords.length} l="穿搭记录" icon="calendar-check" color="#8B5CF6" />
+          <StatCard
+            v={stats.totalVal > 0 ? `¥${stats.totalVal}` : '—'}
+            l="总价值"
+            icon="currency-cny"
+            color="#FFB74D"
+          />
         </View>
 
-        {/* 品类分布 */}
-        {categoryStats.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>👔 品类分布</Text>
-            {categoryStats.map((stat, i) => (
-              <View key={i} style={styles.statRow}>
-                <Text style={styles.statName}>{stat.name}</Text>
-                <View style={styles.statBarContainer}>
-                  <View
-                    style={[
-                      styles.statBar,
-                      { width: `${(stat.count / totalItems) * 100}%` },
-                    ]}
-                  />
-                </View>
-                <Text style={styles.statCount}>{stat.count}</Text>
-              </View>
-            ))}
-          </View>
-        )}
-
         {/* 季节分布 */}
-        {seasonStats.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>🌤️ 季节分布</Text>
-            <View style={styles.seasonGrid}>
-              {seasonStats.map((stat, i) => {
-                const colors: Record<string, string> = {
-                  '春': '#81C784',
-                  '夏': '#FFD54F',
-                  '秋': '#FFB74D',
-                  '冬': '#90CAF9',
-                };
-                return (
-                  <View key={i} style={[styles.seasonCard, { backgroundColor: colors[stat.season] + '30' }]}>
-                    <Text style={styles.seasonEmoji}>
-                      {{ '春': '🌸', '夏': '☀️', '秋': '🍂', '冬': '❄️' }[stat.season]}
-                    </Text>
-                    <Text style={styles.seasonName}>{stat.season}</Text>
-                    <Text style={styles.seasonCount}>{stat.count}件</Text>
+        {stats.seasonStats.length > 0 && (
+          <>
+            <Text style={statsStyles.sectionTitle}>季节分布</Text>
+            <GlassCard style={statsStyles.distCard} padding="lg">
+              {stats.seasonStats.map(({ season, cnt }) => (
+                <View key={season} style={statsStyles.distItem}>
+                  <View style={statsStyles.distLabelRow}>
+                    <GlassPill label={season} size="sm" />
+                    <Text style={statsStyles.distCnt}>{cnt}</Text>
                   </View>
-                );
-              })}
-            </View>
-          </View>
+                  <View style={statsStyles.distBarBg}>
+                    <View
+                      style={[
+                        statsStyles.distBarFill,
+                        { width: `${(cnt / stats.maxCnt) * 100}%`, backgroundColor: COLORS.primary },
+                      ]}
+                    />
+                  </View>
+                </View>
+              ))}
+            </GlassCard>
+          </>
         )}
 
-        {totalItems === 0 && (
-          <View style={styles.empty}>
-            <Text style={styles.emptyText}>还没有任何数据</Text>
-            <Text style={styles.emptySubtext}>添加衣物后这里会显示统计信息</Text>
-          </View>
+        {/* 品类分布 */}
+        {stats.catStats.length > 0 && (
+          <>
+            <Text style={statsStyles.sectionTitle}>品类分布</Text>
+            <GlassCard style={statsStyles.distCard} padding="lg">
+              {stats.catStats.map(({ name, cnt }) => (
+                <View key={name} style={statsStyles.distItem}>
+                  <View style={statsStyles.distLabelRow}>
+                    <Text style={statsStyles.distCatName}>{name}</Text>
+                    <Text style={statsStyles.distCnt}>{cnt}</Text>
+                  </View>
+                  <View style={statsStyles.distBarBg}>
+                    <View
+                      style={[
+                        statsStyles.distBarFill,
+                        { width: `${(cnt / stats.maxCnt) * 100}%`, backgroundColor: COLORS.accent },
+                      ]}
+                    />
+                  </View>
+                </View>
+              ))}
+            </GlassCard>
+          </>
+        )}
+
+        {/* 空状态 */}
+        {clothingItems.length === 0 && (
+          <GlassCard style={statsStyles.emptyCard}>
+            <Icon name="chart-bar" size={48} color={COLORS.textMuted} />
+            <Text style={statsStyles.emptyTitle}>暂无数据</Text>
+            <Text style={statsStyles.emptySub}>添加衣物后显示统计</Text>
+          </GlassCard>
         )}
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
+const statsStyles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: COLORS.background },
+  topNav: {
+    paddingHorizontal: SPACING.xl, paddingVertical: SPACING.sm,
+    backgroundColor: COLORS.glass,
+    borderBottomWidth: 1, borderBottomColor: COLORS.border,
   },
-  header: {
-    padding: SPACING.lg,
-    backgroundColor: COLORS.card,
+  topNavTitle: {
+    fontSize: FONT_SIZES.xxl, fontWeight: '800',
+    color: COLORS.textPrimary, letterSpacing: -0.5,
   },
-  title: {
-    fontSize: FONT_SIZES.xxl,
-    fontWeight: 'bold',
-    color: COLORS.textPrimary,
-  },
-  content: {
-    padding: SPACING.lg,
-  },
-  overviewRow: {
-    flexDirection: 'row',
-    gap: SPACING.md,
-    marginBottom: SPACING.lg,
+  mainScroll: { flex: 1 },
+  mainContent: { padding: SPACING.lg },
+
+  statsGrid: {
+    flexDirection: 'row', flexWrap: 'wrap',
+    gap: SPACING.sm, marginBottom: SPACING.xl,
   },
   statCard: {
-    flex: 1,
-    padding: SPACING.md,
-    borderRadius: BORDER_RADIUS.md,
-    alignItems: 'center',
-    ...SHADOWS.card,
+    width: '48%',
+    backgroundColor: COLORS.glass,
+    borderRadius: BORDER_RADIUS.xl,
+    borderWidth: 1, borderColor: COLORS.glassBorder,
+    padding: SPACING.lg, alignItems: 'center',
+    ...SHADOWS.glass,
   },
-  statNumber: {
-    fontSize: FONT_SIZES.xxl,
-    fontWeight: 'bold',
-    color: COLORS.textPrimary,
+  statIconBg: {
+    width: 40, height: 40, borderRadius: BORDER_RADIUS.md,
+    justifyContent: 'center', alignItems: 'center', marginBottom: SPACING.sm,
   },
-  statLabel: {
-    fontSize: FONT_SIZES.xs,
-    color: COLORS.textSecondary,
-    marginTop: SPACING.xs,
-  },
-  section: {
-    backgroundColor: COLORS.card,
-    padding: SPACING.lg,
-    borderRadius: BORDER_RADIUS.md,
-    marginBottom: SPACING.lg,
-    ...SHADOWS.card,
-  },
+  statVal: { fontSize: FONT_SIZES.xxl, fontWeight: '800' },
+  statLbl: { fontSize: FONT_SIZES.xs, color: COLORS.textSecondary, marginTop: 2, fontWeight: '500' },
+
   sectionTitle: {
-    fontSize: FONT_SIZES.md,
-    fontWeight: '600',
-    color: COLORS.textPrimary,
+    fontSize: FONT_SIZES.lg, fontWeight: '700', color: COLORS.textPrimary,
     marginBottom: SPACING.md,
   },
-  statRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: SPACING.sm,
+  distCard: { marginBottom: SPACING.lg },
+  distItem: { marginBottom: SPACING.md },
+  distLabelRow: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.xs,
   },
-  statName: {
-    width: 60,
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
+  distCatName: { fontSize: FONT_SIZES.sm, fontWeight: '600', color: COLORS.textPrimary },
+  distCnt: { fontSize: FONT_SIZES.sm, fontWeight: '700', color: COLORS.textPrimary },
+  distBarBg: {
+    height: 5, backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 3, overflow: 'hidden',
   },
-  statBarContainer: {
-    flex: 1,
-    height: 8,
-    backgroundColor: COLORS.background,
-    borderRadius: 4,
-    marginHorizontal: SPACING.sm,
-    overflow: 'hidden',
-  },
-  statBar: {
-    height: '100%',
-    backgroundColor: COLORS.accent,
-    borderRadius: 4,
-  },
-  statCount: {
-    width: 30,
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.textPrimary,
-    textAlign: 'right',
-  },
-  seasonGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: SPACING.md,
-  },
-  seasonCard: {
-    width: '47%',
-    padding: SPACING.md,
-    borderRadius: BORDER_RADIUS.md,
-    alignItems: 'center',
-  },
-  seasonEmoji: {
-    fontSize: 28,
-    marginBottom: SPACING.xs,
-  },
-  seasonName: {
-    fontSize: FONT_SIZES.md,
-    fontWeight: '600',
-    color: COLORS.textPrimary,
-  },
-  seasonCount: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
-  },
-  empty: {
-    alignItems: 'center',
-    paddingTop: 60,
-  },
-  emptyText: {
-    fontSize: FONT_SIZES.lg,
-    color: COLORS.textSecondary,
-    marginBottom: SPACING.sm,
-  },
-  emptySubtext: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
-  },
+  distBarFill: { height: '100%', borderRadius: 3 },
+
+  emptyCard: { alignItems: 'center', paddingVertical: SPACING.xxl },
+  emptyTitle: { fontSize: FONT_SIZES.lg, fontWeight: '600', color: COLORS.textSecondary, marginTop: SPACING.md },
+  emptySub: { fontSize: FONT_SIZES.sm, color: COLORS.textMuted, marginTop: SPACING.xs },
 });
 
 export default StatsScreen;

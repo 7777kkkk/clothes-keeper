@@ -520,7 +520,7 @@ const styles = StyleSheet.create({
   },
   section: {
     padding: SPACING.lg,
-    backgroundColor: COLORS.card,
+    backgroundColor: COLORS.glass,
     marginBottom: SPACING.sm,
   },
   sectionTitle: {
@@ -541,7 +541,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: BORDER_RADIUS.sm,
-    backgroundColor: COLORS.secondary,
+    backgroundColor: COLORS.glassLight,
   },
   removeImageBtn: {
     position: 'absolute',
@@ -772,7 +772,7 @@ const styles = StyleSheet.create({
   yearPickerModal: {
     width: 280,
     maxHeight: 400,
-    backgroundColor: COLORS.card,
+    backgroundColor: COLORS.glass,
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.lg,
   },
@@ -805,7 +805,7 @@ const styles = StyleSheet.create({
   },
   attrModal: {
     width: 300,
-    backgroundColor: COLORS.card,
+    backgroundColor: COLORS.glass,
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.lg,
   },
