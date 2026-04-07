@@ -3,7 +3,7 @@
  * 深色玻璃拟态，白色文字
  */
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons as Icon } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -66,25 +66,25 @@ const SettingsScreen = () => {
 
         <SectionHeader title="通用设置" />
         <GlassCard style={styles.settingsGroup} padding="none">
-          <SettingRow icon="sunny-outline" title="外观模式" value="浅色" />
-          <SettingRow icon="umbrella-beach" title="衣橱季节" value="全年" />
-          <SettingRow icon="ruler-outline" title="身材数据" />
-          <SettingRow icon="currency-outline" title="货币单位" value="CNY" />
+          <SettingRow icon="sunny-outline" title="外观模式" value="浅色" onPress={() => Alert.alert('提示', '功能开发中')} />
+          <SettingRow icon="leaf-outline" title="衣橱季节" value="全年" onPress={() => Alert.alert('提示', '功能开发中')} />
+          <SettingRow icon="body-outline" title="身材数据" onPress={() => Alert.alert('提示', '功能开发中')} />
+          <SettingRow icon="cash-outline" title="货币单位" value="CNY" onPress={() => Alert.alert('提示', '功能开发中')} />
         </GlassCard>
 
         <SectionHeader title="数据" />
         <GlassCard style={styles.settingsGroup} padding="none">
-          <SettingRow icon="cloud-upload" title="数据备份" subtitle="备份到云端" />
-          <SettingRow icon="cloud-download" title="恢复数据" subtitle="从备份恢复" />
-          <SettingRow icon="trash-bin-outline" title="回收站" subtitle="已删除衣物" danger />
+          <SettingRow icon="cloud-upload" title="数据备份" subtitle="备份到云端" onPress={() => Alert.alert('提示', '功能开发中')} />
+          <SettingRow icon="cloud-download" title="恢复数据" subtitle="从备份恢复" onPress={() => Alert.alert('提示', '功能开发中')} />
+          <SettingRow icon="trash-bin-outline" title="回收站" subtitle="已删除衣物" danger onPress={() => Alert.alert('提示', '功能开发中')} />
         </GlassCard>
 
         <SectionHeader title="其他" />
         <GlassCard style={styles.settingsGroup} padding="none">
           <SettingRow icon="water" title="Liquid Glass 演示" subtitle="WWDC 2025 特效" onPress={() => nav.navigate('LiquidGlassDemo')} />
-          <SettingRow icon="information-circle-outline" title="关于衣橱" subtitle="版本 1.0.0" />
-          <SettingRow icon="star-outline" title="给 App 评分" />
-          <SettingRow icon="share-social-outline" title="分享给好友" />
+          <SettingRow icon="information-circle-outline" title="关于衣橱" subtitle="版本 1.0.0" onPress={() => Alert.alert('提示', '功能开发中')} />
+          <SettingRow icon="star-outline" title="给 App 评分" onPress={() => Alert.alert('提示', '功能开发中')} />
+          <SettingRow icon="share-social-outline" title="分享给好友" onPress={() => Alert.alert('提示', '功能开发中')} />
         </GlassCard>
 
         <View style={styles.footer}>

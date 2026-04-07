@@ -286,7 +286,8 @@ const calStyles = StyleSheet.create({
   dayCell: {
     width: '13.5%',
     aspectRatio: 1,
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.70)',
     borderRadius: 10,
     position: 'relative',
@@ -296,7 +297,7 @@ const calStyles = StyleSheet.create({
   dayCellToday: { borderWidth: 2, borderColor: COLORS.primary },
   dayText: {
     fontSize: FONT_SIZES.sm, fontWeight: '600', color: COLORS.textPrimary,
-    textAlign: 'left',
+    textAlign: 'center',
   },
   dayTextSelected: { color: '#fff' },
   recordDot: {

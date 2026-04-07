@@ -6,6 +6,24 @@
 
 ## 2026-04-07
 
+### 🐛 Bug 修复（本次）
+
+- **添加衣服页面白屏（AddClothingScreen）**
+  - 根因：`useRoute` 导入但未调用；`route.params` 无空值防御；组件签名 `({ route }: any)` 与 React Navigation 6 不够健壮
+  - 修复：改用 `const route = useRoute()` 获取路由对象；`(route.params ?? {})` 添加空值防御
+
+- **日历日期数字未居中（CalendarScreen）**
+  - 根因：`dayCell` 样式 `justifyContent: 'flex-start'`、`dayText` 样式 `textAlign: 'left'`
+  - 修复：`dayCell` 改为 `justifyContent: 'center' + alignItems: 'center'`，`dayText` 改为 `textAlign: 'center'`
+
+- **设置页图标名称错误（SettingsScreen）**
+  - 根因：使用了 Ionicons 不存在的图标名
+  - 修复：`umbrella-beach` → `leaf-outline`（衣橱季节）、`ruler-outline` → `body-outline`（身材数据）、`currency-outline` → `cash-outline`（货币单位）
+
+- **设置页 SettingRow 无 onPress 响应**
+  - 根因：外观模式/衣橱季节/身材数据/货币单位/数据备份/恢复数据/回收站/关于衣橱/给 App 评分/分享给好友等 SettingRow 缺失 onPress
+  - 修复：全部添加 `onPress={() => Alert.alert('提示', '功能开发中')}` 临时处理；`Alert` 已补充导入
+
 ### 🐛 Bug 修复
 
 - **ClothingDetailScreen 白屏崩溃（purchaseDate 反序列化）**

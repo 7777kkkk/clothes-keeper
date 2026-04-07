@@ -17,12 +17,13 @@ import { Season, LocationType, AttributeTemplate, CustomAttribute } from '../typ
 const SEASONS: Season[] = ['春', '夏', '秋', '冬'];
 const LOCATION_TYPES: LocationType[] = ['家', '学校'];
 
-const AddClothingScreen = ({ route }: any) => {
+const AddClothingScreen = (_props: any) => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
+  const route = useRoute();
   const { addClothingItem, updateClothingItem, clothingItems, categories, attributeTemplates = [] } = useStore();
 
-  const { itemId } = route.params as { itemId?: string };
+  const { itemId } = (route.params ?? {}) as { itemId?: string };
   const isEditMode = !!itemId;
 
   // 动态设置导航标题
