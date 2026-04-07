@@ -8,6 +8,25 @@
 
 ### 🐛 Bug 修复（本次）
 
+- **日历日期数字位置调整（CalendarScreen）**
+  - `dayCell` 的 `justifyContent` 从 `'center'` 改为 `'flex-start'`，数字不再完全居中
+  - `dayText` 保持 `textAlign: 'center'`，配合 `paddingTop: 6` 使数字在格子中略偏左上
+
+- **日历今日穿搭选择逻辑（CalendarScreen）**
+  - 新增穿搭选择 Modal，支持两个 Tab：「选择已有穿搭」和「从衣柜选择」
+  - 已有穿搭 Tab：点击穿搭直接记录到当日日历
+  - 衣柜选择 Tab：勾选衣物后点击确定，弹出 Alert 询问「生成穿搭」或「直接记录」
+  - 选择「生成穿搭」→ 跳转 CreateOutfit，预填已选衣物（`preselectedItemIds`）
+  - 选择「直接记录」→ 直接在日历记录该日穿搭（`itemIds`，无 `outfitId`）
+  - `RootStackParamList.CreateOutfit` 新增 `preselectedItemIds?: string[]` 参数
+
+- **删除 Liquid Glass 演示（SettingsScreen）**
+  - 移除「其他」模块中的 Liquid Glass 演示 SettingRow
+
+- **修复双重导航栏（AttributeManageScreen / AddClothingScreen）**
+  - 根因：`topNav` 样式中有 `paddingTop: insets.top + SPACING.sm`，但外层 `SafeAreaView` 已有 `edges={['top']}` 的 `paddingTop: insets.top`，导致双重顶部留白
+  - 修复：将 `paddingTop: insets.top + SPACING.sm` + `paddingBottom: SPACING.sm` 统一改为 `paddingVertical: SPACING.sm`，由 `SafeAreaView` 统一处理顶部安全区
+
 - **批量操作多次 saveData（RecycleBinScreen + useStore）**
   - 根因：`handleEmptyRestore` / `handleEmptyPermanentDelete` 对每个 item 都单独调用 `restoreClothingItem()` / `permanentDeleteClothingItem()`，每次调用都触发一次 `saveData()`
   - 修复：新增 `restoreAllClothingItems` 和 `permanentDeleteAllClothingItems` 两个批量操作方法到 `useStore.ts`，一次操作 + 一次 `saveData()`

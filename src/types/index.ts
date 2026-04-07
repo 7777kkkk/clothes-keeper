@@ -102,7 +102,7 @@ export type RootStackParamList = {
   MainTabs: undefined;
   AddClothing: { itemId?: string } | undefined;
   ClothingDetail: { itemId: string };
-  CreateOutfit: { outfitId?: string };
+  CreateOutfit: { outfitId?: string; preselectedItemIds?: string[] };
   CategoryManage: undefined;
   OccasionManage: undefined;
   LiquidGlassDemo: undefined;

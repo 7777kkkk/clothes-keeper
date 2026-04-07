@@ -4,7 +4,7 @@
  */
 import React, { useState, useMemo } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Image,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert, Modal,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons as Icon } from '@expo/vector-icons';
@@ -153,7 +153,7 @@ const OutfitDetailCard = ({
 const CalendarScreen = () => {
   const insets = useSafeAreaInsets();
   const nav = useNavigation<any>();
-  const { calendarRecords, clothingItems } = useStore();
+  const { calendarRecords, clothingItems, outfits, addCalendarRecord } = useStore();
 
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
@@ -161,6 +161,11 @@ const CalendarScreen = () => {
   const [selected, setSelected] = useState<string | null>(
     `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
   );
+
+  // 今日穿搭选择 Modal
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addTab, setAddTab] = useState<'outfits' | 'wardrobe'>('outfits');
+  const [wardrobeSelected, setWardrobeSelected] = useState<string[]>([]);
 
   const record = useMemo(() =>
     selected ? calendarRecords.find(r => r.date === selected) || null : null,
@@ -223,7 +228,7 @@ const CalendarScreen = () => {
             record={record}
             clothingItems={clothingItems}
             weather={weather}
-            onAdd={() => nav.navigate('CreateOutfit', {})}
+            onAdd={() => setShowAddModal(true)}
             onEdit={() => nav.navigate('CreateOutfit', record?.outfitId ? { outfitId: record.outfitId } : {})}
           />
         )}
@@ -252,9 +257,160 @@ const CalendarScreen = () => {
 
       {/* FAB */}
       <FAB
-        icon="add" onPress={() => nav.navigate('CreateOutfit', {})}
+        icon="add" onPress={() => setShowAddModal(true)}
         style={{ position: 'absolute', right: 20, bottom: insets.bottom + 84 }}
       />
+
+      {/* 今日穿搭选择 Modal */}
+      <Modal visible={showAddModal} transparent animationType="fade" onRequestClose={() => setShowAddModal(false)}>
+        <View style={calStyles.addModalOverlay}>
+          <View style={calStyles.addModalCard}>
+            {/* 顶部 Tab */}
+            <View style={calStyles.addModalTabs}>
+              <TouchableOpacity
+                style={[calStyles.addModalTab, addTab === 'outfits' && calStyles.addModalTabActive]}
+                onPress={() => setAddTab('outfits')}
+              >
+                <Text style={[calStyles.addModalTabText, addTab === 'outfits' && calStyles.addModalTabTextActive]}>选择已有穿搭</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[calStyles.addModalTab, addTab === 'wardrobe' && calStyles.addModalTabActive]}
+                onPress={() => setAddTab('wardrobe')}
+              >
+                <Text style={[calStyles.addModalTabText, addTab === 'wardrobe' && calStyles.addModalTabTextActive]}>从衣柜选择</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* 已有穿搭列表 */}
+            {addTab === 'outfits' && (
+              <ScrollView style={calStyles.addModalScroll} showsVerticalScrollIndicator={false}>
+                {outfits.length === 0 ? (
+                  <View style={calStyles.addModalEmpty}>
+                    <Icon name="layers-outline" size={40} color="rgba(0,0,0,0.15)" />
+                    <Text style={calStyles.addModalEmptyText}>暂无穿搭</Text>
+                    <TouchableOpacity
+                      style={calStyles.addModalActionBtn}
+                      onPress={() => { setShowAddModal(false); nav.navigate('CreateOutfit', {}); }}
+                    >
+                      <Text style={calStyles.addModalActionBtnText}>去创建</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  outfits.map(outfit => (
+                    <TouchableOpacity
+                      key={outfit.id}
+                      style={calStyles.addModalOutfitItem}
+                      onPress={() => {
+                        setShowAddModal(false);
+                        if (selected) {
+                          addCalendarRecord({
+                            date: selected,
+                            outfitId: outfit.id,
+                            itemIds: outfit.itemIds,
+                            notes: '',
+                          });
+                        }
+                      }}
+                    >
+                      {outfit.coverImage ? (
+                        <Image source={{ uri: outfit.coverImage }} style={calStyles.addModalOutfitImg} />
+                      ) : (
+                        <View style={calStyles.addModalOutfitImgPlaceholder} />
+                      )}
+                      <View style={calStyles.addModalOutfitInfo}>
+                        <Text style={calStyles.addModalOutfitName}>{outfit.name}</Text>
+                        <Text style={calStyles.addModalOutfitCount}>{outfit.itemIds.length} 件单品</Text>
+                      </View>
+                      <Icon name="add-circle-outline" size={22} color={COLORS.primary} />
+                    </TouchableOpacity>
+                  ))
+                )}
+              </ScrollView>
+            )}
+
+            {/* 从衣柜选择 */}
+            {addTab === 'wardrobe' && (
+              <>
+                <ScrollView style={calStyles.addModalScroll} showsVerticalScrollIndicator={false}>
+                  <Text style={calStyles.addModalWardrobeHint}>选择衣物后，可生成穿搭或直接记录</Text>
+                  <View style={calStyles.addModalWardrobeGrid}>
+                    {clothingItems.filter(i => !i.isDeleted).map(item => (
+                      <TouchableOpacity
+                        key={item.id}
+                        style={[
+                          calStyles.addModalWardrobeItem,
+                          wardrobeSelected.includes(item.id) && calStyles.addModalWardrobeItemSelected,
+                        ]}
+                        onPress={() => {
+                          setWardrobeSelected(prev =>
+                            prev.includes(item.id) ? prev.filter(id => id !== item.id) : [...prev, item.id]
+                          );
+                        }}
+                      >
+                        <Image source={{ uri: item.images[0] }} style={calStyles.addModalWardrobeImg} />
+                        {wardrobeSelected.includes(item.id) && (
+                          <View style={calStyles.addModalWardrobeCheck}>
+                            <Icon name="checkmark" size={12} color="#fff" />
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </ScrollView>
+                <TouchableOpacity
+                  style={[
+                    calStyles.addModalConfirmBtn,
+                    wardrobeSelected.length === 0 && calStyles.addModalConfirmBtnDisabled,
+                  ]}
+                  disabled={wardrobeSelected.length === 0}
+                  onPress={() => {
+                    if (!selected) return;
+                    setShowAddModal(false);
+                    Alert.alert(
+                      '穿搭记录',
+                      `已选 ${wardrobeSelected.length} 件衣物，如何处理？`,
+                      [
+                        {
+                          text: '取消',
+                          style: 'cancel',
+                        },
+                        {
+                          text: '生成穿搭',
+                          onPress: () => {
+                            setWardrobeSelected([]);
+                            nav.navigate('CreateOutfit', { preselectedItemIds: wardrobeSelected });
+                          },
+                        },
+                        {
+                          text: '直接记录',
+                          onPress: () => {
+                            addCalendarRecord({
+                              date: selected,
+                              outfitId: null,
+                              itemIds: wardrobeSelected,
+                              notes: '',
+                            });
+                            setWardrobeSelected([]);
+                          },
+                        },
+                      ]
+                    );
+                  }}
+                >
+                  <Text style={calStyles.addModalConfirmBtnText}>
+                    确定{wardrobeSelected.length > 0 ? `（${wardrobeSelected.length}件）` : ''}
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {/* 关闭按钮 */}
+            <TouchableOpacity style={calStyles.addModalClose} onPress={() => { setShowAddModal(false); setWardrobeSelected([]); }}>
+              <Icon name="close" size={20} color={COLORS.textSecondary} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
         </SafeAreaView>
     </GradientBackground>
   );
@@ -286,18 +442,20 @@ const calStyles = StyleSheet.create({
   dayCell: {
     width: '13.5%',
     aspectRatio: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.70)',
     borderRadius: 10,
     position: 'relative',
-    padding: 4,
+    paddingTop: 6,
+    paddingHorizontal: 4,
   },
   dayCellSelected: { backgroundColor: COLORS.primary },
   dayCellToday: { borderWidth: 2, borderColor: COLORS.primary },
   dayText: {
     fontSize: FONT_SIZES.sm, fontWeight: '600', color: COLORS.textPrimary,
     textAlign: 'center',
+    paddingTop: 0,
   },
   dayTextSelected: { color: '#fff' },
   recordDot: {
@@ -343,6 +501,106 @@ const calStyles = StyleSheet.create({
   historyRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   historyDate: { fontSize: FONT_SIZES.md, fontWeight: '600', color: COLORS.textPrimary },
   historyCount: { fontSize: FONT_SIZES.xs, color: COLORS.textSecondary, marginTop: 2 },
+
+  // Add Modal
+  addModalOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'flex-end',
+  },
+  addModalCard: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20, borderTopRightRadius: 20,
+    maxHeight: '75%',
+    paddingTop: SPACING.xl,
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.xl,
+  },
+  addModalTabs: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(0,0,0,0.06)',
+    borderRadius: BORDER_RADIUS.md,
+    padding: 3,
+    marginBottom: SPACING.lg,
+  },
+  addModalTab: {
+    flex: 1, paddingVertical: SPACING.sm,
+    borderRadius: BORDER_RADIUS.sm,
+    alignItems: 'center',
+  },
+  addModalTabActive: { backgroundColor: '#fff' },
+  addModalTabText: { fontSize: FONT_SIZES.sm, fontWeight: '600', color: COLORS.textSecondary },
+  addModalTabTextActive: { color: COLORS.textPrimary },
+  addModalScroll: { maxHeight: 360 },
+  addModalEmpty: { alignItems: 'center', paddingVertical: SPACING.xl, gap: SPACING.sm },
+  addModalEmptyText: { fontSize: FONT_SIZES.sm, color: 'rgba(0,0,0,0.25)', marginTop: SPACING.sm },
+  addModalActionBtn: {
+    marginTop: SPACING.md,
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: SPACING.xl, paddingVertical: SPACING.sm,
+    borderRadius: BORDER_RADIUS.full,
+  },
+  addModalActionBtnText: { color: '#fff', fontWeight: '700', fontSize: FONT_SIZES.sm },
+  addModalOutfitItem: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: SPACING.md,
+    borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.06)',
+    gap: SPACING.md,
+  },
+  addModalOutfitImg: {
+    width: 48, height: 48, borderRadius: BORDER_RADIUS.md,
+    backgroundColor: 'rgba(0,0,0,0.08)',
+  },
+  addModalOutfitImgPlaceholder: {
+    width: 48, height: 48, borderRadius: BORDER_RADIUS.md,
+    backgroundColor: 'rgba(0,0,0,0.08)',
+  },
+  addModalOutfitInfo: { flex: 1 },
+  addModalOutfitName: { fontSize: FONT_SIZES.md, fontWeight: '600', color: COLORS.textPrimary },
+  addModalOutfitCount: { fontSize: FONT_SIZES.xs, color: COLORS.textSecondary, marginTop: 2 },
+  addModalWardrobeHint: {
+    fontSize: FONT_SIZES.sm, color: COLORS.textSecondary,
+    marginBottom: SPACING.md, textAlign: 'center',
+  },
+  addModalWardrobeGrid: {
+    flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm,
+  },
+  addModalWardrobeItem: {
+    width: 72, height: 72,
+    borderRadius: BORDER_RADIUS.md,
+    overflow: 'hidden',
+    borderWidth: 2, borderColor: 'transparent',
+  },
+  addModalWardrobeItemSelected: {
+    borderColor: COLORS.primary,
+  },
+  addModalWardrobeImg: {
+    width: 72, height: 72, backgroundColor: 'rgba(0,0,0,0.08)',
+  },
+  addModalWardrobeCheck: {
+    position: 'absolute', top: 4, right: 4,
+    width: 18, height: 18, borderRadius: 9,
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  addModalConfirmBtn: {
+    marginTop: SPACING.lg,
+    backgroundColor: COLORS.primary,
+    paddingVertical: SPACING.md,
+    borderRadius: BORDER_RADIUS.md,
+    alignItems: 'center',
+  },
+  addModalConfirmBtnDisabled: {
+    backgroundColor: 'rgba(0,0,0,0.2)',
+  },
+  addModalConfirmBtnText: {
+    color: '#fff', fontSize: FONT_SIZES.md, fontWeight: '700',
+  },
+  addModalClose: {
+    position: 'absolute', top: SPACING.md, right: SPACING.lg,
+    width: 28, height: 28, borderRadius: 14,
+    backgroundColor: 'rgba(0,0,0,0.08)',
+    justifyContent: 'center', alignItems: 'center',
+  },
 });
 
 export default CalendarScreen;

@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   topNav: {
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: SPACING.lg, paddingBottom: SPACING.sm,
+    paddingHorizontal: SPACING.lg, paddingVertical: SPACING.sm,
     backgroundColor: 'rgba(255,255,255,0.60)',
     borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.4)',
     gap: SPACING.md,

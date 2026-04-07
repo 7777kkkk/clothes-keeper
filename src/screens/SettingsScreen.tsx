@@ -162,7 +162,7 @@ const SettingsScreen = () => {
               {
                 text: '确认',
                 style: 'destructive',
-                onPress: async (input) => {
+                onPress: async (input?: string) => {
                   if (input === '确认') {
                     await clearAllData();
                     Alert.alert('已清除', '所有数据已清除，App 将重新加载。');
@@ -270,7 +270,6 @@ const SettingsScreen = () => {
 
           <SectionHeader title="其他" />
           <GlassCard style={styles.settingsGroup} padding="none">
-            <SettingRow icon="water" title="Liquid Glass 演示" subtitle="WWDC 2025 特效" onPress={() => nav.navigate('LiquidGlassDemo')} />
             <SettingRow icon="information-circle-outline" title="关于衣橱" subtitle="版本 1.0.0" onPress={() => Alert.alert('提示', '功能开发中')} />
             <SettingRow icon="star-outline" title="给 App 评分" onPress={() => Alert.alert('提示', '功能开发中')} />
             <SettingRow icon="share-social-outline" title="分享给好友" onPress={() => Alert.alert('提示', '功能开发中')} />

@@ -633,7 +633,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   topNav: {
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: SPACING.lg, paddingBottom: SPACING.sm,
+    paddingHorizontal: SPACING.lg, paddingVertical: SPACING.sm,
     backgroundColor: COLORS.background,
     borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.08)',
     gap: SPACING.md,

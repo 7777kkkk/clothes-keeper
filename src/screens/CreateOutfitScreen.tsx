@@ -22,7 +22,7 @@ const CreateOutfitScreen = () => {
   const insets = useSafeAreaInsets();
   const route = useRoute<RouteProps>();
   const navigation = useNavigation();
-  const { outfitId } = route.params || {};
+  const { outfitId, preselectedItemIds } = route.params || {};
 
   const { outfits, occasions, clothingItems, addOutfit, updateOutfit, deleteOutfit, incrementWearCount } = useStore();
   const existingOutfit = outfitId ? outfits.find(o => o.id === outfitId) : null;
@@ -32,7 +32,7 @@ const CreateOutfitScreen = () => {
     existingOutfit?.occasions || []
   );
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>(
-    existingOutfit?.itemIds || []
+    preselectedItemIds || existingOutfit?.itemIds || []
   );
   const [notes, setNotes] = useState(existingOutfit?.notes || '');
   const [didIncrementCount, setDidIncrementCount] = useState(false);
