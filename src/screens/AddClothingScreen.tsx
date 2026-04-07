@@ -26,9 +26,12 @@ const AddClothingScreen = (_props: any) => {
   const { itemId } = (route.params ?? {}) as { itemId?: string };
   const isEditMode = !!itemId;
 
-  // 动态设置导航标题
+  // 动态设置导航标题，同时隐藏 React Navigation 默认 header
   useEffect(() => {
-    navigation.setOptions({ title: isEditMode ? '编辑衣物' : '添加衣物' });
+    navigation.setOptions({
+      title: isEditMode ? '编辑衣物' : '添加衣物',
+      headerShown: false,
+    });
   }, [isEditMode]);
 
   // 编辑模式下预填数据

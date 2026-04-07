@@ -24,8 +24,8 @@
   - 移除「其他」模块中的 Liquid Glass 演示 SettingRow
 
 - **修复双重导航栏（AttributeManageScreen / AddClothingScreen）**
-  - 根因：`topNav` 样式中有 `paddingTop: insets.top + SPACING.sm`，但外层 `SafeAreaView` 已有 `edges={['top']}` 的 `paddingTop: insets.top`，导致双重顶部留白
-  - 修复：将 `paddingTop: insets.top + SPACING.sm` + `paddingBottom: SPACING.sm` 统一改为 `paddingVertical: SPACING.sm`，由 `SafeAreaView` 统一处理顶部安全区
+  - 根因：页面自定义了 `topNav` View，但未设置 `headerShown: false`，导致 React Navigation Stack 默认 header 也同时显示
+  - 修复：`AttributeManageScreen` 新增 `useEffect` 调用 `nav.setOptions({ headerShown: false })`；`AddClothingScreen` 在现有 `useEffect` 中补充 `headerShown: false`
 
 - **设置页面其他模块按钮功能完善（SettingsScreen）**
   - `关于衣橱` → 显示版本信息 Alert（App 名 + 版本 + 简介）

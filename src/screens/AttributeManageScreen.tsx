@@ -2,7 +2,7 @@
  * AttributeManageScreen — 衣服属性管理
  * 支持6种字段类型，像 Notion 一样编辑属性模板
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   TextInput, Modal, Alert, Switch,
@@ -41,6 +41,11 @@ const AttributeManageScreen = () => {
   const insets = useSafeAreaInsets();
   const nav = useNavigation<any>();
   const { attributeTemplates = [], addAttributeTemplate, updateAttributeTemplate, deleteAttributeTemplate } = useStore();
+
+  // 隐藏 React Navigation 默认 header
+  useEffect(() => {
+    nav.setOptions({ headerShown: false });
+  }, []);
 
   const toggleVisible = (id: string) => {
     const tpl = attributeTemplates.find(t => t.id === id);
