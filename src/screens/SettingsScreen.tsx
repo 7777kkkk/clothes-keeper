@@ -154,17 +154,26 @@ const SettingsScreen = () => {
         text: '确定',
         style: 'destructive',
         onPress: () => {
-          Alert.alert('再次确认', '请输入「确认」以执行清除操作', [
-            { text: '取消' },
-            {
-              text: '确认',
-              style: 'destructive',
-              onPress: async () => {
-                await clearAllData();
-                Alert.alert('已清除', '所有数据已清除，App 将重新加载。');
+          Alert.prompt(
+            '最终确认',
+            '此操作不可恢复，请在输入框输入「确认」',
+            [
+              { text: '取消', style: 'cancel' },
+              {
+                text: '确认',
+                style: 'destructive',
+                onPress: async (input) => {
+                  if (input === '确认') {
+                    await clearAllData();
+                    Alert.alert('已清除', '所有数据已清除，App 将重新加载。');
+                  }
+                },
               },
-            },
-          ]);
+            ],
+            'plain-text',
+            '',
+            'default'
+          );
         },
       },
     ]);

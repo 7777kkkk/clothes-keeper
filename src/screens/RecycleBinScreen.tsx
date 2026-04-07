@@ -14,7 +14,7 @@ import { ClothingItem } from '../types';
 const RecycleBinScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  const { clothingItems, categories, restoreClothingItem, permanentDeleteClothingItem } = useStore();
+  const { clothingItems, categories, restoreClothingItem, permanentDeleteClothingItem, restoreAllClothingItems, permanentDeleteAllClothingItems } = useStore();
 
   const deletedItems = clothingItems.filter(item => item.isDeleted);
 
@@ -64,7 +64,7 @@ const RecycleBinScreen = () => {
       `确定要恢复全部 ${deletedItems.length} 件衣物吗？`,
       [
         { text: '取消' },
-        { text: '全部恢复', onPress: () => deletedItems.forEach(item => restoreClothingItem(item.id)) },
+        { text: '全部恢复', onPress: () => restoreAllClothingItems() },
       ]
     );
   };
@@ -84,7 +84,7 @@ const RecycleBinScreen = () => {
               '请输入"确认"以执行彻底删除',
               [
                 { text: '取消' },
-                { text: '确认', style: 'destructive', onPress: () => deletedItems.forEach(item => permanentDeleteClothingItem(item.id)) },
+                { text: '确认', style: 'destructive', onPress: () => permanentDeleteAllClothingItems() },
               ]
             );
           },

@@ -6,6 +6,17 @@
 
 ## 2026-04-07
 
+### 🐛 Bug 修复（本次）
+
+- **批量操作多次 saveData（RecycleBinScreen + useStore）**
+  - 根因：`handleEmptyRestore` / `handleEmptyPermanentDelete` 对每个 item 都单独调用 `restoreClothingItem()` / `permanentDeleteClothingItem()`，每次调用都触发一次 `saveData()`
+  - 修复：新增 `restoreAllClothingItems` 和 `permanentDeleteAllClothingItems` 两个批量操作方法到 `useStore.ts`，一次操作 + 一次 `saveData()`
+  - 影响：RecycleBinScreen 的「恢复全部」和「清空回收站」按钮
+
+- **清除数据确认流程（SettingsScreen）**
+  - 根因：`handleClearAllData` 第二步确认只有按钮点击，无文本输入验证，与 RecycleBinScreen `handlePermanentDelete` 的确认流程不一致
+  - 修复：将第二步 Alert 按钮确认改为 `Alert.prompt` 文本输入验证（需输入「确认」），与回收站彻底删除流程保持一致
+
 ### ✨ 新功能（本次）
 
 - **通用设置功能完善（SettingsScreen）**

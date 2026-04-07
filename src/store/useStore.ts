@@ -56,6 +56,8 @@ interface AppState {
   // 软删除/恢复/彻底删除
   restoreClothingItem: (id: string) => void;
   permanentDeleteClothingItem: (id: string) => void;
+  restoreAllClothingItems: () => void;
+  permanentDeleteAllClothingItems: () => void;
   clearAllData: () => Promise<void>;
 
   // 搭配操作
@@ -510,6 +512,22 @@ export const useStore = create<AppState>((set, get) => ({
     const { saveData } = get();
     set({
       clothingItems: get().clothingItems.filter(c => c.id !== id),
+    });
+    saveData();
+  },
+
+  restoreAllClothingItems: () => {
+    const { saveData } = get();
+    set({
+      clothingItems: get().clothingItems.map(c => ({ ...c, isDeleted: false })),
+    });
+    saveData();
+  },
+
+  permanentDeleteAllClothingItems: () => {
+    const { saveData } = get();
+    set({
+      clothingItems: get().clothingItems.filter(c => !c.isDeleted),
     });
     saveData();
   },
