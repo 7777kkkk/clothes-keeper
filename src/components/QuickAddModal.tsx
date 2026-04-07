@@ -16,7 +16,6 @@ import * as ImagePicker from 'expo-image-picker';
 import { Ionicons as Icon } from '@expo/vector-icons';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../constants/theme';
-import { LiquidGlassCard } from './glass/LiquidGlassCard';
 import { Season } from '../types';
 
 const SEASONS: Season[] = ['春', '夏', '秋', '冬'];
@@ -36,7 +35,6 @@ export const QuickAddModal = ({ visible, onClose }: Props) => {
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [clipboardText, setClipboardText] = useState('');
 
-  // 每次打开时尝试读取剪贴板
   useEffect(() => {
     if (visible) {
       setName(''); setImages([]); setCategoryId(''); setBrand(''); setPrice(''); setSeasons([]);
@@ -46,16 +44,13 @@ export const QuickAddModal = ({ visible, onClose }: Props) => {
 
   const checkClipboard = async () => {
     try {
-      const text = await Clipboard.getStringAsync();
+      const text = await Clipboard.getClipboardStringAsync();
       if (text && text.length > 3) {
         setClipboardText(text);
-        // 如果剪贴板看起来像商品链接，尝试提取名称
         const urlMatch = text.match(/https?:\/\/[^\s]+/);
         if (urlMatch) {
-          // 有URL，尝试解析
           setName(extractNameFromUrl(urlMatch[0]) || text.substring(0, 30));
         } else if (text.length < 100) {
-          // 纯文本，假设是商品标题
           setName(text);
         }
       }
@@ -63,18 +58,17 @@ export const QuickAddModal = ({ visible, onClose }: Props) => {
   };
 
   const extractNameFromUrl = (url: string): string => {
-    // 简单提取URL中的关键词作为名称
     try {
       const u = new URL(url);
       const path = u.pathname.replace(/\//g, ' ').replace(/-/g, ' ');
-      return path.trim().substring(0, 50) || url;
+      return path.trim().substring(0, 50) || url.substring(0, 30);
     } catch {
       return url.substring(0, 30);
     }
   };
 
   const pasteClipboard = async () => {
-    const text = await Clipboard.getStringAsync();
+    const text = await Clipboard.getClipboardStringAsync();
     if (text) setName(text.substring(0, 100));
   };
 
@@ -108,7 +102,7 @@ export const QuickAddModal = ({ visible, onClose }: Props) => {
       price: parseFloat(price) || 0,
       purchaseDate: null,
       purchaseDateMode: 'full',
-      notes: `快捷添加 | 剪贴板: ${clipboardText.substring(0, 50)}`,
+      notes: clipboardText ? `快捷添加 | 来源: ${clipboardText.substring(0, 50)}` : '快捷添加',
       wearCount: 0,
       customAttributes: [],
     });
@@ -118,76 +112,76 @@ export const QuickAddModal = ({ visible, onClose }: Props) => {
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <KeyboardAvoidingView style={styles.modal} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={modalStyles.modal} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {/* 顶部栏 */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+        <View style={modalStyles.header}>
+          <TouchableOpacity onPress={onClose} style={modalStyles.closeBtn}>
             <Icon name="close" size={22} color={COLORS.textSecondary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>便捷添加</Text>
-          <TouchableOpacity onPress={handleSave} style={styles.saveBtn}>
-            <Text style={styles.saveBtnText}>保存</Text>
+          <Text style={modalStyles.headerTitle}>便捷添加</Text>
+          <TouchableOpacity onPress={handleSave} style={modalStyles.saveBtn}>
+            <Text style={modalStyles.saveBtnText}>保存</Text>
           </TouchableOpacity>
         </View>
 
-        <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={modalStyles.body} showsVerticalScrollIndicator={false}>
           {/* 剪贴板信息 */}
           {clipboardText.length > 0 && (
-            <TouchableOpacity style={styles.clipboardBanner} onPress={pasteClipboard}>
+            <TouchableOpacity style={modalStyles.clipboardBanner} onPress={pasteClipboard}>
               <Icon name="clipboard-outline" size={16} color={COLORS.primary} />
-              <Text style={styles.clipboardText} numberOfLines={2}>
-                检测到内容：{clipboardText.substring(0, 80)}
+              <Text style={modalStyles.clipboardText} numberOfLines={2}>
+                检测到：{clipboardText.substring(0, 80)}
               </Text>
-              <Text style={styles.clipboardAction}>点击填入</Text>
+              <Text style={modalStyles.clipboardAction}>填入</Text>
             </TouchableOpacity>
           )}
 
           {/* 名称 */}
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>名称 *</Text>
-            <View style={styles.nameRow}>
+          <View style={modalStyles.field}>
+            <Text style={modalStyles.fieldLabel}>名称 *</Text>
+            <View style={modalStyles.nameRow}>
               <TextInput
-                style={[styles.input, { flex: 1 }]}
+                style={[modalStyles.input, { flex: 1 }]}
                 placeholder="自动从剪贴板填充或手动输入"
                 placeholderTextColor={COLORS.textSecondary}
                 value={name}
                 onChangeText={setName}
               />
-              <TouchableOpacity style={styles.pasteBtn} onPress={pasteClipboard}>
+              <TouchableOpacity style={modalStyles.pasteBtn} onPress={pasteClipboard}>
                 <Icon name="clipboard-outline" size={20} color={COLORS.primary} />
               </TouchableOpacity>
             </View>
           </View>
 
           {/* 图片 */}
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>照片 *（{images.length}张）</Text>
+          <View style={modalStyles.field}>
+            <Text style={modalStyles.fieldLabel}>照片 *（{images.length}张）</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: SPACING.sm }}>
               {images.map((uri, idx) => (
-                <View key={idx} style={styles.imgWrap}>
-                  <Image source={{ uri }} style={styles.img} />
-                  <TouchableOpacity style={styles.imgRemove} onPress={() => removeImage(idx)}>
+                <View key={idx} style={modalStyles.imgWrap}>
+                  <Image source={{ uri }} style={modalStyles.img} />
+                  <TouchableOpacity style={modalStyles.imgRemove} onPress={() => removeImage(idx)}>
                     <Icon name="close-circle" size={18} color={COLORS.error} />
                   </TouchableOpacity>
                 </View>
               ))}
-              <TouchableOpacity style={styles.addImg} onPress={pickImages}>
+              <TouchableOpacity style={modalStyles.addImg} onPress={pickImages}>
                 <Icon name="add" size={24} color={COLORS.textSecondary} />
               </TouchableOpacity>
             </ScrollView>
           </View>
 
           {/* 分类 */}
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>分类</Text>
+          <View style={modalStyles.field}>
+            <Text style={modalStyles.fieldLabel}>分类</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: SPACING.sm }}>
               {categories.map(cat => (
                 <TouchableOpacity
                   key={cat.id}
-                  style={[styles.catPill, categoryId === cat.id && styles.catPillActive]}
+                  style={[modalStyles.catPill, categoryId === cat.id && modalStyles.catPillActive]}
                   onPress={() => setCategoryId(cat.id)}
                 >
-                  <Text style={[styles.catPillText, categoryId === cat.id && styles.catPillTextActive]}>
+                  <Text style={[modalStyles.catPillText, categoryId === cat.id && modalStyles.catPillTextActive]}>
                     {cat.name}
                   </Text>
                 </TouchableOpacity>
@@ -196,10 +190,10 @@ export const QuickAddModal = ({ visible, onClose }: Props) => {
           </View>
 
           {/* 品牌 */}
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>品牌</Text>
+          <View style={modalStyles.field}>
+            <Text style={modalStyles.fieldLabel}>品牌</Text>
             <TextInput
-              style={styles.input}
+              style={modalStyles.input}
               placeholder="可选，如：UNIQLO、Nike"
               placeholderTextColor={COLORS.textSecondary}
               value={brand}
@@ -208,10 +202,10 @@ export const QuickAddModal = ({ visible, onClose }: Props) => {
           </View>
 
           {/* 价格 */}
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>价格</Text>
+          <View style={modalStyles.field}>
+            <Text style={modalStyles.fieldLabel}>价格</Text>
             <TextInput
-              style={styles.input}
+              style={modalStyles.input}
               placeholder="可选"
               placeholderTextColor={COLORS.textSecondary}
               keyboardType="numeric"
@@ -221,16 +215,18 @@ export const QuickAddModal = ({ visible, onClose }: Props) => {
           </View>
 
           {/* 季节 */}
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>季节</Text>
+          <View style={modalStyles.field}>
+            <Text style={modalStyles.fieldLabel}>季节</Text>
             <View style={{ flexDirection: 'row', gap: SPACING.sm }}>
               {SEASONS.map(s => (
                 <TouchableOpacity
                   key={s}
-                  style={[styles.seasonPill, seasons.includes(s) && styles.seasonPillActive]}
+                  style={[modalStyles.seasonPill, seasons.includes(s) && modalStyles.seasonPillActive]}
                   onPress={() => toggleSeason(s)}
                 >
-                  <Text style={[styles.seasonPillText, seasons.includes(s) && styles.seasonPillTextActive]}>{s}</Text>
+                  <Text style={[modalStyles.seasonPillText, seasons.includes(s) && modalStyles.seasonPillTextActive]}>
+                    {s}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -241,7 +237,7 @@ export const QuickAddModal = ({ visible, onClose }: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
+const modalStyles = StyleSheet.create({
   modal: { flex: 1, backgroundColor: '#fff' },
   header: {
     flexDirection: 'row', alignItems: 'center',
@@ -256,7 +252,6 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.md,
   },
   saveBtnText: { color: '#fff', fontWeight: '700', fontSize: FONT_SIZES.sm },
-
   body: { padding: SPACING.lg, gap: SPACING.lg },
 
   clipboardBanner: {

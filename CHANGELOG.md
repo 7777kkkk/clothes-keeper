@@ -6,6 +6,27 @@
 
 ## 2026-04-07
 
+### 🐛 Bug 修复
+
+- **ClothingDetailScreen 白屏崩溃**
+  - 修复：数据未加载完成（`isLoaded=false`）时显示 loading 状态，而非直接渲染导致崩溃
+  - 修复：未找到衣物时显示完整导航栏（返回按钮），避免空白页面无法退出
+  - 修复：`CustomAttribute` 类型新增 `templateId` 可选字段，实现模板精确匹配
+  - 修复：详情页自定义属性匹配逻辑优先用 `templateId`，兼容旧数据（name 匹配兜底）
+
+- **属性管理 ON/OFF 联动未生效**
+  - 根因：`AddClothingScreen` 未订阅 `attributeTemplates`，导致开关切换后页面不更新
+  - 修复：`AddClothingScreen` 现订阅 `attributeTemplates` 并根据 `visible` 过滤动态渲染字段
+
+- **添加衣服页面字段硬编码**
+  - 根因：`AddClothingScreen` 手动渲染品牌/价格/日期等字段，未读取 `attributeTemplates`
+  - 修复：改为动态读取 `attributeTemplates.filter(t => t.visible && !t.isSystem)`，按 `order` 排序渲染
+  - 新增：自定义字段状态管理（`customValues`、`customMultiValues`、`customCheckboxValues`）
+
+- **属性管理新建属性后添加衣服页面没有该字段**
+  - 根因：同 Bug 2，`AddClothingScreen` 未订阅 store 变更
+  - 修复：订阅后，新增/删除/开关属性后页面自动重新渲染
+
 ### 🔧 功能更新
 
 - **添加衣服页面动态表单（属性管理联动）**
@@ -47,7 +68,7 @@
   - 实现 `migrateAttributeTemplates()` 函数，自动将旧格式 `[{id, name, order}]` 迁移到新格式
   - 迁移时自动补全系统内置字段
 
-### 🐛 Bug 修复
+### 🐛 旧 Bug 修复（前日）
 
 - `react-native-linear-gradient` → 换成 `expo-linear-gradient`（Expo SDK 54 新架构兼容）
 - `react-native-vector-icons` → 换成 `@expo/vector-icons`（字体加载问题）

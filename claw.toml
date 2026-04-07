@@ -1,0 +1,13 @@
+[hub]
+port = 18792
+host = "127.0.0.1"
+
+[agents.default]
+command = "python3"
+args = ["-m", "claude"]
+env = { CLAUDE_API_KEY = "dummy" }
+
+[plugins.read]
+dirs = [".claude/plugins"]
+
+[plugins.syntax]

@@ -13,7 +13,7 @@ import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../constants/theme';
 import { GradientBackground } from '../components/glass/GradientBackground';
-import { RootStackParamList, Season, LocationType } from '../types';
+import { RootStackParamList, Season, LocationType, CustomAttribute } from '../types';
 
 type RouteProps = RouteProp<RootStackParamList, 'ClothingDetail'>;
 
@@ -25,21 +25,41 @@ const ClothingDetailScreen = () => {
   const {
     clothingItems,
     categories,
+    updateClothingItem,
     deleteClothingItem,
     attributeTemplates = [],
+    isLoaded,
   } = useStore();
+
+  // 数据未加载完成时显示 loading
+  if (!isLoaded) {
+    return (
+      <GradientBackground>
+        <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ color: COLORS.textSecondary, fontSize: FONT_SIZES.md }}>加载中...</Text>
+        </SafeAreaView>
+      </GradientBackground>
+    );
+  }
+
+  const item = clothingItems.find(c => c.id === itemId);
 
   // 只显示 visible=true 的字段
   const visibleTemplates = attributeTemplates.filter(t => t.visible !== false);
   const visibleIds = new Set(visibleTemplates.map(t => t.id));
 
-  const item = clothingItems.find(c => c.id === itemId);
-
   if (!item) {
     return (
       <GradientBackground>
         <SafeAreaView style={{ flex: 1 }}>
-          <View style={[styles.notFound, { paddingTop: insets.top + SPACING.lg }]}>
+          <View style={[styles.topNav, { paddingTop: insets.top + SPACING.sm }]}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+              <Text style={styles.backBtnText}>←</Text>
+            </TouchableOpacity>
+            <Text style={styles.navTitle}>衣物详情</Text>
+            <View style={{ width: 34 }} />
+          </View>
+          <View style={[styles.notFound, { flex: 1, justifyContent: 'center', alignItems: 'center' }]}>
             <Text style={styles.notFoundText}>未找到该衣物</Text>
           </View>
         </SafeAreaView>
@@ -173,10 +193,17 @@ const ClothingDetailScreen = () => {
             </View>
           </View>
 
-          {/* 自定义属性 — 根据 visible 过滤 */}
+          {/* 自定义属性 — 根据 visible 过滤（优先用 templateId，兼容旧 name 匹配） */}
           {(() => {
             const visibleCustomAttrs = (item.customAttributes || []).filter(attr => {
-              const tpl = attributeTemplates.find(t => t.name === attr.name);
+              // 优先通过 templateId 精确匹配
+              let tpl = attr.templateId
+                ? attributeTemplates.find(t => t.id === attr.templateId)
+                : undefined;
+              // 兼容旧数据：通过 name 匹配
+              if (!tpl && attr.name) {
+                tpl = attributeTemplates.find(t => t.name === attr.name);
+              }
               return tpl && tpl.visible;
             });
             if (visibleCustomAttrs.length === 0) return null;
