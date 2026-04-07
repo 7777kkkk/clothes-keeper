@@ -92,12 +92,24 @@ const ClothingDetailScreen = () => {
     return item.locationType;
   };
 
-  const formatPurchaseDate = () => {
-    if (!item.purchaseDate) return '未设置';
-    if (item.purchaseDateMode === 'year') {
-      return `${item.purchaseDate.getFullYear()}年`;
+  // 工具函数：从 AsyncStorage 反序列化后，purchaseDate 可能是字符串需要转换
+  const toDate = (v: Date | string | null | undefined): Date | null => {
+    if (!v) return null;
+    if (v instanceof Date) return v;
+    if (typeof v === 'string') {
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? null : d;
     }
-    return `${item.purchaseDate.getFullYear()}-${String(item.purchaseDate.getMonth() + 1).padStart(2, '0')}-${String(item.purchaseDate.getDate()).padStart(2, '0')}`;
+    return null;
+  };
+
+  const formatPurchaseDate = () => {
+    const date = toDate(item.purchaseDate);
+    if (!date) return '未设置';
+    if (item.purchaseDateMode === 'year') {
+      return `${date.getFullYear()}年`;
+    }
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   };
 
   // ============ 浏览模式 ============
@@ -195,17 +207,20 @@ const ClothingDetailScreen = () => {
 
           {/* 自定义属性 — 根据 visible 过滤（优先用 templateId，兼容旧 name 匹配） */}
           {(() => {
-            const visibleCustomAttrs = (item.customAttributes || []).filter(attr => {
-              // 优先通过 templateId 精确匹配
-              let tpl = attr.templateId
-                ? attributeTemplates.find(t => t.id === attr.templateId)
-                : undefined;
-              // 兼容旧数据：通过 name 匹配
-              if (!tpl && attr.name) {
-                tpl = attributeTemplates.find(t => t.name === attr.name);
-              }
-              return tpl && tpl.visible;
-            });
+            const visibleCustomAttrs = (item.customAttributes || [])
+              .filter(attr => attr && typeof attr.name === 'string' && attr.name.trim() !== '')
+              .filter(attr => attr.type === 'text' || attr.type === 'category')
+              .filter(attr => {
+                // 优先通过 templateId 精确匹配
+                let tpl = attr.templateId
+                  ? attributeTemplates.find(t => t.id === attr.templateId)
+                  : undefined;
+                // 兼容旧数据：通过 name 匹配
+                if (!tpl && attr.name) {
+                  tpl = attributeTemplates.find(t => t.name === attr.name);
+                }
+                return tpl && tpl.visible;
+              });
             if (visibleCustomAttrs.length === 0) return null;
             return (
               <View style={styles.section}>

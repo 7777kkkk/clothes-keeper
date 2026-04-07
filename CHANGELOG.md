@@ -8,11 +8,12 @@
 
 ### 🐛 Bug 修复
 
-- **ClothingDetailScreen 白屏崩溃**
-  - 修复：数据未加载完成（`isLoaded=false`）时显示 loading 状态，而非直接渲染导致崩溃
-  - 修复：未找到衣物时显示完整导航栏（返回按钮），避免空白页面无法退出
-  - 修复：`CustomAttribute` 类型新增 `templateId` 可选字段，实现模板精确匹配
-  - 修复：详情页自定义属性匹配逻辑优先用 `templateId`，兼容旧数据（name 匹配兜底）
+- **ClothingDetailScreen 白屏崩溃（purchaseDate 反序列化）**
+  - 根因：`item.purchaseDate` 从 AsyncStorage 反序列化后是字符串，直接调用 `.getFullYear()` 崩溃
+  - 修复：新增 `toDate()` 工具函数，将字符串日期转换回 `Date` 对象，格式化函数全部使用 `toDate()` 防御
+  - 修复：`customAttributes` 解构增加空值防御 `(item.customAttributes || []).filter(...)`
+  - 修复：自定义属性过滤脏数据，跳过 `name/value` 为空或 `type` 不符合 `'text'|'category'` 的记录
+  - 修复：`item.purchaseDateMode` 空值防御（用 `toDate` 统一处理）
 
 - **属性管理 ON/OFF 联动未生效**
   - 根因：`AddClothingScreen` 未订阅 `attributeTemplates`，导致开关切换后页面不更新
@@ -48,7 +49,7 @@
   - `AttributeManageScreen` 的 ON/OFF 开关 → `updateAttributeTemplate(id, { visible })` → 全局生效
   - 添加衣服页面和详情页自动响应 `visible` 字段变化
 
-### 🐛 Bug 修复
+### 🐛 Bug 修复（前日）
 
 - **Liquid Glass 效果**
   - 新增 `LiquidGlassCard.tsx` 组件，支持 blur 模糊 + 白色折射 + 触控回弹动画
