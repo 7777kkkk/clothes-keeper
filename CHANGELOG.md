@@ -8,6 +8,27 @@
 
 ### 🔧 功能更新
 
+- **添加衣服页面动态表单（属性管理联动）**
+  - 重构 `AddClothingScreen.tsx`，根据 `attributeTemplates` 中 `visible=true` 的字段动态生成表单
+  - 支持 7 种字段类型动态渲染：text、number、select、multi_select、date、checkbox、images
+  - 添加/编辑衣服复用同一页面，通过 `itemId` 参数区分
+  - 导航类型 `AddClothing` 改为 `{ itemId?: string } | undefined`
+
+- **衣服详情页动态字段显示**
+  - `ClothingDetailScreen` 根据 `visibleIds` 过滤系统字段（名称/分类/季节/位置/品牌/价格/日期/备注）
+  - 自定义属性根据对应模板的 `visible` 字段过滤显示
+
+- **编辑衣服功能**
+  - `AddClothingScreen` 支持编辑已有衣服（传入 `itemId`），预填所有字段值
+  - `ClothingDetailScreen`「编辑」按钮导航到 `AddClothingScreen`（带 `itemId`）
+  - 清理了 `ClothingDetailScreen` 内联编辑模式的冗余代码（原本 ~500 行 → ~280 行）
+
+- **属性管理联动（验证完成）**
+  - `AttributeManageScreen` 的 ON/OFF 开关 → `updateAttributeTemplate(id, { visible })` → 全局生效
+  - 添加衣服页面和详情页自动响应 `visible` 字段变化
+
+### 🐛 Bug 修复
+
 - **Liquid Glass 效果**
   - 新增 `LiquidGlassCard.tsx` 组件，支持 blur 模糊 + 白色折射 + 触控回弹动画
   - 实现了 WWDC 2025 Liquid Glass 风格的玻璃效果

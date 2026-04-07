@@ -33,6 +33,7 @@ export interface CustomAttribute {
   name: string;       // 属性名，如"颜色"、"材质"
   value: string;     // 属性值，如"蓝色"、"棉"
   type: 'text' | 'category'; // 类型：文本或分类选项
+  templateId?: string; // 关联的 AttributeTemplate ID，便于精确匹配
 }
 
 // 存放位置类型
@@ -98,7 +99,7 @@ export type RootTabParamList = {
 
 export type RootStackParamList = {
   MainTabs: undefined;
-  AddClothing: undefined;
+  AddClothing: { itemId?: string } | undefined;
   ClothingDetail: { itemId: string };
   CreateOutfit: { outfitId?: string };
   CategoryManage: undefined;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   TextInput, Image, Alert, Modal,
@@ -11,7 +11,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
 import { GradientBackground } from '../components/glass/GradientBackground';
-import { Season, LocationType } from '../types';
+import { Season, LocationType, AttributeTemplate, CustomAttribute } from '../types';
 
 const SEASONS: Season[] = ['春', '夏', '秋', '冬'];
 const LOCATION_TYPES: LocationType[] = ['家', '学校'];
@@ -19,7 +19,14 @@ const LOCATION_TYPES: LocationType[] = ['家', '学校'];
 const AddClothingScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
-  const { addClothingItem, categories } = useStore();
+  const { addClothingItem, categories, attributeTemplates = [] } = useStore();
+
+  // 筛选出 visible=true 且非系统内置的字段，按 order 排序
+  const visibleCustomFields = useMemo(() => {
+    return attributeTemplates
+      .filter(t => t.visible && !t.isSystem)
+      .sort((a, b) => a.order - b.order);
+  }, [attributeTemplates]);
 
   const [images, setImages] = useState<string[]>([]);
   const [name, setName] = useState('');
@@ -35,6 +42,13 @@ const AddClothingScreen = () => {
   const [yearPickerValue, setYearPickerValue] = useState(new Date().getFullYear());
   const [notes, setNotes] = useState('');
   const [showYearModal, setShowYearModal] = useState(false);
+
+  // 动态自定义字段值，key = templateId
+  const [customValues, setCustomValues] = useState<Record<string, string>>({});
+  // 多选字段值，key = templateId, value = string[]
+  const [customMultiValues, setCustomMultiValues] = useState<Record<string, string[]>>({});
+  // 开关字段值，key = templateId
+  const [customCheckboxValues, setCustomCheckboxValues] = useState<Record<string, boolean>>({});
 
   const pickImages = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -76,10 +90,177 @@ const AddClothingScreen = () => {
     setShowYearModal(false);
   };
 
+  const setCustomValue = (templateId: string, value: string) => {
+    setCustomValues(prev => ({ ...prev, [templateId]: value }));
+  };
+
+  const toggleCustomMultiValue = (templateId: string, optionLabel: string) => {
+    setCustomMultiValues(prev => {
+      const current = prev[templateId] || [];
+      const updated = current.includes(optionLabel)
+        ? current.filter(v => v !== optionLabel)
+        : [...current, optionLabel];
+      return { ...prev, [templateId]: updated };
+    });
+  };
+
+  const setCustomCheckboxValue = (templateId: string, value: boolean) => {
+    setCustomCheckboxValues(prev => ({ ...prev, [templateId]: value }));
+  };
+
+  // 动态渲染单个自定义字段
+  const renderCustomField = (tpl: AttributeTemplate) => {
+    const { fieldType, id: tplId, name: tplName, options = [] } = tpl;
+
+    if (fieldType === 'select') {
+      return (
+        <View key={tplId} style={styles.section}>
+          <Text style={styles.sectionTitle}>{tplName}</Text>
+          <View style={styles.pillsRow}>
+            {options.map(opt => (
+              <TouchableOpacity
+                key={opt.id}
+                style={[styles.pill, customValues[tplId] === opt.label && styles.pillActive]}
+                onPress={() => setCustomValue(tplId, opt.label)}
+              >
+                <Text style={[styles.pillText, customValues[tplId] === opt.label && styles.pillTextActive]}>
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      );
+    }
+
+    if (fieldType === 'multi_select') {
+      const selected = customMultiValues[tplId] || [];
+      return (
+        <View key={tplId} style={styles.section}>
+          <Text style={styles.sectionTitle}>{tplName}</Text>
+          <View style={styles.pillsRow}>
+            {options.map(opt => (
+              <TouchableOpacity
+                key={opt.id}
+                style={[styles.pill, selected.includes(opt.label) && styles.pillActive]}
+                onPress={() => toggleCustomMultiValue(tplId, opt.label)}
+              >
+                <Text style={[styles.pillText, selected.includes(opt.label) && styles.pillTextActive]}>
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      );
+    }
+
+    if (fieldType === 'checkbox') {
+      const checked = customCheckboxValues[tplId] ?? false;
+      return (
+        <View key={tplId} style={styles.section}>
+          <TouchableOpacity
+            style={styles.checkboxRow}
+            onPress={() => setCustomCheckboxValue(tplId, !checked)}
+          >
+            <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
+              {checked && <Icon name="checkmark" size={12} color="#fff" />}
+            </View>
+            <Text style={styles.checkboxLabel}>{tplName}</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    if (fieldType === 'number') {
+      return (
+        <View key={tplId} style={styles.section}>
+          <Text style={styles.sectionTitle}>{tplName}</Text>
+          <TextInput
+            style={styles.input}
+            placeholder={tplName}
+            placeholderTextColor={COLORS.textSecondary}
+            keyboardType="numeric"
+            value={customValues[tplId] || ''}
+            onChangeText={v => setCustomValue(tplId, v)}
+          />
+        </View>
+      );
+    }
+
+    if (fieldType === 'date') {
+      return (
+        <View key={tplId} style={styles.section}>
+          <Text style={styles.sectionTitle}>{tplName}</Text>
+          <TouchableOpacity
+            style={styles.dateDisplay}
+            onPress={() => setShowDatePicker(true)}
+          >
+            <Text style={styles.dateDisplayText}>{customValues[tplId] || '点击选择'}</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    // 默认 text
+    return (
+      <View key={tplId} style={styles.section}>
+        <Text style={styles.sectionTitle}>{tplName}</Text>
+        <TextInput
+          style={styles.input}
+          placeholder={tplName}
+          placeholderTextColor={COLORS.textSecondary}
+          value={customValues[tplId] || ''}
+          onChangeText={v => setCustomValue(tplId, v)}
+        />
+      </View>
+    );
+  };
+
   const handleSave = () => {
     if (!name.trim()) { Alert.alert('请输入名称'); return; }
-    if (!categoryId) { Alert.alert('请选择品类'); return; }
+    if (!categoryId) { Alert.alert('请选择分类'); return; }
     if (images.length === 0) { Alert.alert('请添加至少一张图片'); return; }
+
+    // 构建 customAttributes：只包含有值的自定义字段
+    const customAttributes: CustomAttribute[] = [];
+
+    visibleCustomFields.forEach(tpl => {
+      const { fieldType, id: tplId, name: tplName } = tpl;
+
+      if (fieldType === 'multi_select') {
+        const values = customMultiValues[tplId];
+        if (values && values.length > 0) {
+          customAttributes.push({
+            id: Math.random().toString(36).substring(2, 9),
+            name: tplName,
+            value: values.join('、'),
+            type: 'text',
+            templateId: tplId,
+          });
+        }
+      } else if (fieldType === 'checkbox') {
+        const checked = customCheckboxValues[tplId] ?? false;
+        customAttributes.push({
+          id: Math.random().toString(36).substring(2, 9),
+          name: tplName,
+          value: checked ? '是' : '否',
+          type: 'text',
+          templateId: tplId,
+        });
+      } else {
+        const val = customValues[tplId];
+        if (val && val.trim()) {
+          customAttributes.push({
+            id: Math.random().toString(36).substring(2, 9),
+            name: tplName,
+            value: val.trim(),
+            type: 'text',
+            templateId: tplId,
+          });
+        }
+      }
+    });
 
     addClothingItem({
       name: name.trim(),
@@ -94,7 +275,7 @@ const AddClothingScreen = () => {
       purchaseDateMode,
       notes: notes.trim(),
       wearCount: 0,
-      customAttributes: [],
+      customAttributes,
     });
 
     Alert.alert('添加成功', '衣物已添加到衣橱', [
@@ -255,13 +436,7 @@ const AddClothingScreen = () => {
               )}
               <TouchableOpacity
                 style={[styles.dateModeBtn, purchaseDateMode === 'year' && styles.dateModeBtnActive]}
-                onPress={() => {
-                  if (!purchaseDate || purchaseDateMode === 'full') {
-                    setShowYearModal(true);
-                  } else {
-                    
-                  }
-                }}
+                onPress={() => setShowYearModal(true)}
               >
                 <Text style={styles.dateModeBtnText}>
                   {purchaseDateMode === 'year' ? '按年' : '按年月'}
@@ -269,6 +444,9 @@ const AddClothingScreen = () => {
               </TouchableOpacity>
             </View>
           </View>
+
+          {/* 动态自定义属性字段（来自 attributeTemplates） */}
+          {visibleCustomFields.map(renderCustomField)}
 
           {/* 备注 */}
           <View style={styles.section}>
@@ -403,6 +581,20 @@ const styles = StyleSheet.create({
   },
   dateModeBtnActive: { backgroundColor: COLORS.primary },
   dateModeBtnText: { fontSize: FONT_SIZES.xs, fontWeight: '600', color: COLORS.textSecondary },
+
+  // Checkbox field
+  checkboxRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
+  checkbox: {
+    width: 20, height: 20, borderRadius: 4,
+    borderWidth: 1.5, borderColor: 'rgba(0,0,0,0.25)',
+    justifyContent: 'center', alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.7)',
+  },
+  checkboxChecked: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  checkboxLabel: { fontSize: FONT_SIZES.md, color: COLORS.textPrimary, fontWeight: '500' },
 
   saveButton: {
     marginTop: SPACING.md,
