@@ -7,6 +7,9 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons as Icon } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import * as Clipboard from 'expo-clipboard';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import * as DocumentPicker from 'expo-document-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useStore } from '../store/useStore';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, SHADOWS } from '../constants/theme';
@@ -57,31 +60,18 @@ const RestoreModal = ({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>恢复数据</Text>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>恢复数据</Text>
+            <TouchableOpacity onPress={onClose} style={styles.modalCloseBtn}>
+              <Icon name="close" size={20} color={COLORS.textSecondary} />
+            </TouchableOpacity>
+          </View>
           <Text style={styles.modalSubtitle}>
-            请粘贴之前备份的 JSON 数据，导入后将覆盖当前所有数据。
+            请选择之前备份的 JSON 文件，导入后将覆盖当前所有数据。
           </Text>
-          <TextInput
-            style={styles.modalInput}
-            value={input}
-            onChangeText={setInput}
-            placeholder="粘贴 JSON 数据..."
-            placeholderTextColor={COLORS.textSecondary}
-            multiline
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
           <View style={styles.modalBtns}>
             <TouchableOpacity style={styles.modalBtnCancel} onPress={onClose} activeOpacity={0.8}>
               <Text style={styles.modalBtnCancelText}>取消</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.modalBtnRestore, !input.trim() && styles.modalBtnDisabled]}
-              onPress={() => input.trim() && onRestore(input.trim())}
-              activeOpacity={0.8}
-              disabled={!input.trim()}
-            >
-              <Text style={styles.modalBtnRestoreText}>恢复</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -120,7 +110,7 @@ const SettingsScreen = () => {
     ]);
   };
 
-  // 衣橱季节选择
+  // 衣橱季节选择（四季+全年）
   const handleSeasonPress = () => {
     Alert.alert('衣橱季节', '选择当前季节', [
       { text: '春季', onPress: () => updateSetting('season', '春') },
@@ -179,10 +169,12 @@ const SettingsScreen = () => {
     ]);
   };
 
-  // 数据备份
+  // 数据备份（文件形式）
   const handleBackup = async () => {
     try {
       const data = {
+        version: '1.0',
+        exportDate: new Date().toISOString(),
         categories,
         clothingItems,
         outfits,
@@ -197,32 +189,97 @@ const SettingsScreen = () => {
         bodyData,
       };
       const json = JSON.stringify(data, null, 2);
-      await Clipboard.setStringAsync(json);
-      Alert.alert(
-        '备份成功 ✓',
-        '数据已复制到剪贴板，请妥善保存。\n\n注意：数据中包含图片 URL 等信息，建议仅在换设备时使用。',
-        [{ text: '确定' }]
-      );
+      
+      // 生成文件名：clothes-keeper-backup-YYYY-MM-DD.json
+      const date = new Date().toISOString().split('T')[0];
+      const fileName = `clothes-keeper-backup-${date}.json`;
+      const fileUri = FileSystem.documentDirectory + fileName;
+      
+      // 写入文件
+      await FileSystem.writeAsStringAsync(fileUri, json, {
+        encoding: FileSystem.EncodingType.UTF8,
+      });
+      
+      // 检查是否支持分享
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(fileUri, {
+          mimeType: 'application/json',
+          dialogTitle: '导出衣橱备份',
+        });
+      } else {
+        // 不支持分享时，复制到剪贴板
+        await Clipboard.setStringAsync(json);
+        Alert.alert(
+          '备份成功 ✓',
+          `文件已保存为 ${fileName}\n\n由于当前设备不支持文件分享，JSON 数据已复制到剪贴板。`,
+          [{ text: '确定' }]
+        );
+      }
     } catch (e) {
-      Alert.alert('备份失败', '请稍后重试');
+      // 失败时降级到剪贴板
+      try {
+        const data = {
+          version: '1.0',
+          exportDate: new Date().toISOString(),
+          categories,
+          clothingItems,
+          outfits,
+          occasions,
+          calendarRecords,
+          attributeTemplates,
+        };
+        const json = JSON.stringify(data, null, 2);
+        await Clipboard.setStringAsync(json);
+        Alert.alert(
+          '备份成功 ✓',
+          '数据已复制到剪贴板，请妥善保存。\n\n注意：数据中包含图片 URL 等信息，建议仅在换设备时使用。',
+          [{ text: '确定' }]
+        );
+      } catch (_e) {
+        Alert.alert('备份失败', '请稍后重试');
+      }
     }
   };
 
-  // 数据恢复
-  const handleRestore = async (json: string) => {
+  // 数据恢复（从文件导入）
+  const handleRestore = async () => {
     try {
-      const data = JSON.parse(json);
-      // 简单校验
-      if (!data.categories && !data.clothingItems) {
-        Alert.alert('格式错误', '数据格式不正确，请确认粘贴的内容来自本应用的备份。');
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'application/json',
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled) {
         return;
       }
+
+      const fileUri = result.assets[0].uri;
+      
+      // 读取文件内容
+      const json = await FileSystem.readAsStringAsync(fileUri, {
+        encoding: FileSystem.EncodingType.UTF8,
+      });
+
+      // 解析JSON
+      const data = JSON.parse(json);
+
+      // 简单校验
+      if (!data.categories && !data.clothingItems) {
+        Alert.alert('格式错误', '数据格式不正确，请确认选择的是本应用的备份文件。');
+        return;
+      }
+
+      // 保存到存储
       await AsyncStorage.setItem(STORAGE_KEY, json);
       await loadData();
       setRestoreVisible(false);
       Alert.alert('恢复成功 ✓', '数据已成功恢复，App 将重新加载。');
-    } catch (e) {
-      Alert.alert('恢复失败', 'JSON 解析失败，请确认数据格式正确。');
+    } catch (e: any) {
+      if (e.message?.includes('canceled') || e.message?.includes('cancelled')) {
+        return;
+      }
+      Alert.alert('恢复失败', '文件读取失败，请确认文件格式正确。');
     }
   };
 
@@ -262,8 +319,8 @@ const SettingsScreen = () => {
 
           <SectionHeader title="数据" />
           <GlassCard style={styles.settingsGroup} padding="none">
-            <SettingRow icon="cloud-upload" title="数据备份" subtitle="复制到剪贴板" onPress={handleBackup} />
-            <SettingRow icon="cloud-download" title="恢复数据" subtitle="从备份恢复" onPress={() => setRestoreVisible(true)} />
+            <SettingRow icon="cloud-upload" title="数据备份" subtitle="导出为 JSON 文件" onPress={handleBackup} />
+            <SettingRow icon="cloud-download" title="恢复数据" subtitle="从备份文件导入" onPress={handleRestore} />
             <SettingRow icon="trash-bin-outline" title="回收站" subtitle="已删除衣物" danger onPress={() => nav.navigate('RecycleBin')} />
             <SettingRow icon="nuclear-outline" title="清除所有数据" subtitle="不可恢复" danger onPress={handleClearAllData} />
           </GlassCard>
@@ -351,11 +408,24 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.xl,
     padding: SPACING.xl,
   },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.sm,
+  },
   modalTitle: {
     fontSize: FONT_SIZES.lg,
     fontWeight: '700',
     color: COLORS.textPrimary,
-    marginBottom: SPACING.sm,
+  },
+  modalCloseBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: BORDER_RADIUS.full,
+    backgroundColor: COLORS.divider,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modalSubtitle: {
     fontSize: FONT_SIZES.sm,
