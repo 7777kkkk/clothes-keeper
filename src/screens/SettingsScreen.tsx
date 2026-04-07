@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert,
-  Modal, TextInput, KeyboardAvoidingView, Platform,
+  Modal, TextInput, KeyboardAvoidingView, Platform, Share, Linking,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons as Icon } from '@expo/vector-icons';
@@ -270,9 +270,46 @@ const SettingsScreen = () => {
 
           <SectionHeader title="其他" />
           <GlassCard style={styles.settingsGroup} padding="none">
-            <SettingRow icon="information-circle-outline" title="关于衣橱" subtitle="版本 1.0.0" onPress={() => Alert.alert('提示', '功能开发中')} />
-            <SettingRow icon="star-outline" title="给 App 评分" onPress={() => Alert.alert('提示', '功能开发中')} />
-            <SettingRow icon="share-social-outline" title="分享给好友" onPress={() => Alert.alert('提示', '功能开发中')} />
+            <SettingRow icon="information-circle-outline" title="关于衣橱" subtitle="版本 1.0.0" onPress={() => {
+              Alert.alert(
+                '关于衣橱',
+                'Clothes Keeper v1.0\n\n一款帮助你管理衣橱、记录每日穿搭的 App。\n\nMade with ❤️',
+                [{ text: '确定' }]
+              );
+            }} />
+            <SettingRow icon="star-outline" title="给 App 评分" onPress={() => {
+              Alert.alert(
+                '给 App 评分',
+                '如果喜欢这款 App，欢迎在应用商店给我们五星好评！\n\n您的支持是我们最大的动力 💪',
+                [
+                  { text: '稍后再说', style: 'cancel' },
+                  { text: '好的，去评分', onPress: () => {
+                    // 尝试打开应用商店（iOS/Android 通用跳转）
+                    const storeUrl = Platform.OS === 'ios'
+                      ? 'https://apps.apple.com/app/idYOUR_APP_ID?action=write-review'
+                      : 'market://details?id=com.clotheskeeper';
+                    Linking.openURL(storeUrl).catch(() => {
+                      // Fallback: 用邮箱反馈
+                      Linking.openURL('mailto:feedback@clotheskeeper.app?subject=衣橱 App 评分反馈');
+                    });
+                  }},
+                ]
+              );
+            }} />
+            <SettingRow icon="share-social-outline" title="分享给好友" onPress={async () => {
+              try {
+                await Share.share({
+                  title: '衣橱 App',
+                  message:
+                    '推荐你使用「衣橱」App！🛍️\n\n帮我管理每日穿搭，记录每件衣服的穿搭次数，科学管理你的衣橱！\n\n' +
+                    (Platform.OS === 'ios'
+                      ? 'iOS 下载：https://apps.apple.com/app/idYOUR_APP_ID'
+                      : 'Android 下载：https://play.google.com/store/apps/details?id=com.clotheskeeper'),
+                });
+              } catch (e) {
+                Alert.alert('分享失败', '请稍后重试');
+              }
+            }} />
           </GlassCard>
 
           <View style={styles.footer}>

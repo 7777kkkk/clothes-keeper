@@ -27,6 +27,11 @@
   - 根因：`topNav` 样式中有 `paddingTop: insets.top + SPACING.sm`，但外层 `SafeAreaView` 已有 `edges={['top']}` 的 `paddingTop: insets.top`，导致双重顶部留白
   - 修复：将 `paddingTop: insets.top + SPACING.sm` + `paddingBottom: SPACING.sm` 统一改为 `paddingVertical: SPACING.sm`，由 `SafeAreaView` 统一处理顶部安全区
 
+- **设置页面其他模块按钮功能完善（SettingsScreen）**
+  - `关于衣橱` → 显示版本信息 Alert（App 名 + 版本 + 简介）
+  - `给 App 评分` → Alert 引导评分，点击跳转应用商店评分页（iOS App Store / Android Market），无法打开时降级为邮箱反馈
+  - `分享给好友` → `Share.share()` 分享 App 名 + 下载链接文字
+
 - **批量操作多次 saveData（RecycleBinScreen + useStore）**
   - 根因：`handleEmptyRestore` / `handleEmptyPermanentDelete` 对每个 item 都单独调用 `restoreClothingItem()` / `permanentDeleteClothingItem()`，每次调用都触发一次 `saveData()`
   - 修复：新增 `restoreAllClothingItems` 和 `permanentDeleteAllClothingItems` 两个批量操作方法到 `useStore.ts`，一次操作 + 一次 `saveData()`
