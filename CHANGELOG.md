@@ -6,6 +6,20 @@
 
 ## 2026-04-07
 
+### ✨ 新功能（本次）
+
+- **身材数据页面（BodyDataScreen）**
+  - 新增 `src/screens/BodyDataScreen.tsx`，支持录入和管理 18 项身材数据（身高/体重/头围/颈围/肩宽/胸围/下胸围/腰围/腹围/臀围/上臂围/前臂围/袖长/手腕围/掌围/大腿围/小腿围/踝围）
+  - 字段分组显示：基础 / 躯干 / 四肢
+  - 使用 GlassCard + 玻璃拟态风格，数字输入自动显示 cm 单位
+  - 数据持久化到 store（新增 `bodyData` state，支持 saveData/loadData 迁移）
+  - 入口：`SettingsScreen` → 通用设置 → 身材数据
+
+- **数据备份与恢复（SettingsScreen）**
+  - 备份：点击后自动复制全量 JSON 数据（含衣橱/搭配/场合/身材数据）到剪贴板
+  - 恢复：弹出 TextInput 弹窗，粘贴 JSON 后一键导入，覆盖本地存储并重新加载 App
+  - 数据字段包含：`categories / clothingItems / outfits / occasions / calendarRecords / attributeTemplates / homeMode / bodyData` 等
+
 ### 🐛 Bug 修复（本次）
 
 - **添加衣服页面白屏（AddClothingScreen）**

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Category, ClothingItem, Outfit, Occasion, CalendarRecord, LocationType, Season, AttributeTemplate, AttributeFieldType } from '../types';
+import { Category, ClothingItem, Outfit, Occasion, CalendarRecord, LocationType, Season, AttributeTemplate, AttributeFieldType, BodyData } from '../types';
 import { DEFAULT_CATEGORIES, DEFAULT_OCCASIONS } from '../constants/theme';
 
 const STORAGE_KEY = '@clothes_keeper_data';
@@ -17,6 +17,7 @@ interface AppState {
   occasions: Occasion[];
   calendarRecords: CalendarRecord[];
   attributeTemplates: AttributeTemplate[];
+  bodyData: BodyData;
 
   // 主页模式（自主模式筛选/排序）
   homeMode: HomeMode;
@@ -62,6 +63,9 @@ interface AppState {
   setHomeMode: (mode: HomeMode) => void;
   setHomeSort: (sortBy: HomeSortBy, order?: HomeSortOrder) => void;
   setHomeFilter: (categoryId: string | null, season: Season | null) => void;
+
+  // 身材数据操作
+  setBodyData: (data: Partial<BodyData>) => void;
 
   // 穿搭次数操作
   incrementWearCount: (itemIds: string[]) => void;
@@ -287,6 +291,28 @@ export const useStore = create<AppState>((set, get) => ({
   homeFilterCategory: null,
   homeFilterSeason: null,
 
+  // 身材数据
+  bodyData: {
+    height: null,
+    weight: null,
+    headCircumference: null,
+    neckCircumference: null,
+    shoulderWidth: null,
+    chestCircumference: null,
+    underBust: null,
+    waistCircumference: null,
+    abdomenCircumference: null,
+    hipCircumference: null,
+    upperArmCircumference: null,
+    forearmCircumference: null,
+    sleeveLength: null,
+    wristCircumference: null,
+    palmCircumference: null,
+    thighCircumference: null,
+    calfCircumference: null,
+    ankleCircumference: null,
+  },
+
   // 保存到本地存储
   saveData: async () => {
     const state = get();
@@ -302,6 +328,7 @@ export const useStore = create<AppState>((set, get) => ({
       homeSortOrder: state.homeSortOrder,
       homeFilterCategory: state.homeFilterCategory,
       homeFilterSeason: state.homeFilterSeason,
+      bodyData: state.bodyData,
     };
     try {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -330,6 +357,14 @@ export const useStore = create<AppState>((set, get) => ({
           homeSortOrder: data.homeSortOrder || 'desc',
           homeFilterCategory: data.homeFilterCategory || null,
           homeFilterSeason: data.homeFilterSeason || null,
+          bodyData: data.bodyData || {
+            height: null, weight: null, headCircumference: null, neckCircumference: null,
+            shoulderWidth: null, chestCircumference: null, underBust: null,
+            waistCircumference: null, abdomenCircumference: null, hipCircumference: null,
+            upperArmCircumference: null, forearmCircumference: null, sleeveLength: null,
+            wristCircumference: null, palmCircumference: null, thighCircumference: null,
+            calfCircumference: null, ankleCircumference: null,
+          },
           isLoaded: true,
         });
       } else {
@@ -356,6 +391,14 @@ export const useStore = create<AppState>((set, get) => ({
           homeSortOrder: 'desc',
           homeFilterCategory: null,
           homeFilterSeason: null,
+          bodyData: {
+            height: null, weight: null, headCircumference: null, neckCircumference: null,
+            shoulderWidth: null, chestCircumference: null, underBust: null,
+            waistCircumference: null, abdomenCircumference: null, hipCircumference: null,
+            upperArmCircumference: null, forearmCircumference: null, sleeveLength: null,
+            wristCircumference: null, palmCircumference: null, thighCircumference: null,
+            calfCircumference: null, ankleCircumference: null,
+          },
         };
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(initialData));
       }
@@ -568,6 +611,12 @@ export const useStore = create<AppState>((set, get) => ({
 
   setHomeFilter: (categoryId, season) => {
     set({ homeFilterCategory: categoryId, homeFilterSeason: season });
+    get().saveData();
+  },
+
+  // 身材数据操作
+  setBodyData: (data) => {
+    set(state => ({ bodyData: { ...state.bodyData, ...data } }));
     get().saveData();
   },
 

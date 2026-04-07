@@ -106,4 +106,27 @@ export type RootStackParamList = {
   OccasionManage: undefined;
   LiquidGlassDemo: undefined;
   AttributeManage: undefined;
+  BodyData: undefined;
 };
+
+// 身材数据
+export interface BodyData {
+  height: number | null;
+  weight: number | null;
+  headCircumference: number | null;
+  neckCircumference: number | null;
+  shoulderWidth: number | null;
+  chestCircumference: number | null;
+  underBust: number | null;
+  waistCircumference: number | null;
+  abdomenCircumference: number | null;
+  hipCircumference: number | null;
+  upperArmCircumference: number | null;
+  forearmCircumference: number | null;
+  sleeveLength: number | null;
+  wristCircumference: number | null;
+  palmCircumference: number | null;
+  thighCircumference: number | null;
+  calfCircumference: number | null;
+  ankleCircumference: number | null;
+}
