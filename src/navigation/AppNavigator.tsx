@@ -19,6 +19,7 @@ import OccasionManageScreen from '../screens/OccasionManageScreen';
 import LiquidGlassDemoScreen from '../screens/LiquidGlassDemoScreen';
 import AttributeManageScreen from '../screens/AttributeManageScreen';
 import BodyDataScreen from '../screens/BodyDataScreen';
+import RecycleBinScreen from '../screens/RecycleBinScreen';
 import { RootTabParamList, RootStackParamList } from '../types';
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -113,6 +114,7 @@ const AppNavigator = () => (
       <Stack.Screen name="LiquidGlassDemo" component={LiquidGlassDemoScreen} options={{ title: 'Liquid Glass 演示' }} />
       <Stack.Screen name="AttributeManage" component={AttributeManageScreen} options={{ title: '属性管理' }} />
       <Stack.Screen name="BodyData" component={BodyDataScreen} options={{ title: '身材数据' }} />
+      <Stack.Screen name="RecycleBin" component={RecycleBinScreen} options={{ title: '回收站', headerShown: false }} />
     </Stack.Navigator>
   </NavigationContainer>
 );

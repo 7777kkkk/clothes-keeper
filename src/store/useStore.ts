@@ -9,6 +9,16 @@ type HomeMode = 'default' | 'custom';
 type HomeSortBy = 'name' | 'purchaseDate' | 'wearCount' | 'createdAt';
 type HomeSortOrder = 'asc' | 'desc';
 
+export type ThemeMode = 'light' | 'dark' | 'system';
+export type SeasonSetting = '春' | '夏' | '秋' | '冬' | '全年';
+export type CurrencyUnit = 'CNY' | 'USD' | 'EUR' | 'JPY' | 'GBP' | 'KRW';
+
+export interface Settings {
+  theme: ThemeMode;
+  season: SeasonSetting;
+  currency: CurrencyUnit;
+}
+
 interface AppState {
   // 数据
   categories: Category[];
@@ -26,6 +36,10 @@ interface AppState {
   homeFilterCategory: string | null;
   homeFilterSeason: Season | null;
 
+  // 设置
+  settings: Settings;
+  updateSetting: <K extends keyof Settings>(key: K, value: Settings[K]) => void;
+
   // 加载状态
   isLoaded: boolean;
 
@@ -38,6 +52,11 @@ interface AppState {
   addClothingItem: (item: Omit<ClothingItem, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateClothingItem: (id: string, item: Partial<ClothingItem>) => void;
   deleteClothingItem: (id: string) => void;
+
+  // 软删除/恢复/彻底删除
+  restoreClothingItem: (id: string) => void;
+  permanentDeleteClothingItem: (id: string) => void;
+  clearAllData: () => Promise<void>;
 
   // 搭配操作
   addOutfit: (outfit: Omit<Outfit, 'id' | 'createdAt'>) => void;
@@ -111,15 +130,13 @@ function migrateAttributeTemplates(stored: AttributeTemplate[] | undefined): Att
 
   // 检查是否已经是新格式（有 isSystem 字段）
   if (stored[0] && 'isSystem' in stored[0]) {
-    // 已经是新格式，直接返回（同时确保系统字段存在）
     const hasSystemFields = stored.some(t => t.isSystem === true);
     if (hasSystemFields) return stored;
-    // 缺少系统字段，补上
     const customTemplates = stored.filter((t: any) => t.isSystem !== true);
     return [...SYSTEM_TEMPLATES, ...customTemplates];
   }
 
-  // 旧格式迁移：把旧的自定义字段（颜色/材质/尺码）转换，追加系统字段
+  // 旧格式迁移
   const customTemplates: AttributeTemplate[] = stored.map((t: any, idx: number) => ({
     id: t.id || String(idx),
     name: t.name,
@@ -258,6 +275,49 @@ const SAMPLE_CLOTHING_ITEMS: Omit<ClothingItem, 'id' | 'createdAt' | 'updatedAt'
   },
 ];
 
+const DEFAULT_SETTINGS: Settings = {
+  theme: 'system',
+  season: '全年',
+  currency: 'CNY',
+};
+
+const DEFAULT_BODY_DATA: BodyData = {
+  height: null,
+  weight: null,
+  headCircumference: null,
+  neckCircumference: null,
+  shoulderWidth: null,
+  chestCircumference: null,
+  underBust: null,
+  waistCircumference: null,
+  abdomenCircumference: null,
+  hipCircumference: null,
+  upperArmCircumference: null,
+  forearmCircumference: null,
+  sleeveLength: null,
+  wristCircumference: null,
+  palmCircumference: null,
+  thighCircumference: null,
+  calfCircumference: null,
+  ankleCircumference: null,
+};
+
+const DEFAULT_TEMPLATES: AttributeTemplate[] = [
+  { id: 'sys_name', name: '名称', fieldType: 'text', options: [], order: 0, visible: true, isSystem: true },
+  { id: 'sys_images', name: '照片', fieldType: 'images', options: [], order: 1, visible: true, isSystem: true },
+  { id: 'sys_category', name: '分类', fieldType: 'select', options: [], order: 2, visible: true, isSystem: true },
+  { id: 'sys_seasons', name: '季节', fieldType: 'multi_select', options: [{ id: '1', label: '春' }, { id: '2', label: '夏' }, { id: '3', label: '秋' }, { id: '4', label: '冬' }], order: 3, visible: true, isSystem: true },
+  { id: 'sys_location', name: '存放位置', fieldType: 'select', options: [{ id: '1', label: '家' }, { id: '2', label: '学校' }], order: 4, visible: true, isSystem: true },
+  { id: 'sys_location_detail', name: '具体位置', fieldType: 'text', options: [], order: 5, visible: true, isSystem: true },
+  { id: 'sys_brand', name: '品牌', fieldType: 'text', options: [], order: 6, visible: true, isSystem: true },
+  { id: 'sys_price', name: '价格', fieldType: 'number', options: [], order: 7, visible: true, isSystem: true },
+  { id: 'sys_purchase_date', name: '购买日期', fieldType: 'date', options: [], order: 8, visible: true, isSystem: true },
+  { id: 'sys_notes', name: '备注', fieldType: 'text', options: [], order: 9, visible: true, isSystem: true },
+  { id: '1', name: '颜色', fieldType: 'select', options: [{ id: '1', label: '红' }, { id: '2', label: '蓝' }, { id: '3', label: '白' }, { id: '4', label: '黑' }], order: 10, visible: true, isSystem: false },
+  { id: '2', name: '材质', fieldType: 'select', options: [{ id: '1', label: '棉' }, { id: '2', label: '麻' }, { id: '3', label: '涤纶' }, { id: '4', label: '羊毛' }], order: 11, visible: true, isSystem: false },
+  { id: '3', name: '尺码', fieldType: 'select', options: [{ id: '1', label: 'XS' }, { id: '2', label: 'S' }, { id: '3', label: 'M' }, { id: '4', label: 'L' }, { id: '5', label: 'XL' }, { id: '6', label: 'XXL' }], order: 12, visible: true, isSystem: false },
+];
+
 export const useStore = create<AppState>((set, get) => ({
   // 初始数据
   categories: DEFAULT_CATEGORIES.map(c => ({ ...c, createdAt: new Date() })),
@@ -265,23 +325,7 @@ export const useStore = create<AppState>((set, get) => ({
   outfits: [],
   occasions: DEFAULT_OCCASIONS.map(o => ({ ...o })),
   calendarRecords: [],
-  attributeTemplates: [
-    // 系统内置字段（不可删除）
-    { id: 'sys_name', name: '名称', fieldType: 'text', options: [], order: 0, visible: true, isSystem: true },
-    { id: 'sys_images', name: '照片', fieldType: 'images', options: [], order: 1, visible: true, isSystem: true },
-    { id: 'sys_category', name: '分类', fieldType: 'select', options: [], order: 2, visible: true, isSystem: true },
-    { id: 'sys_seasons', name: '季节', fieldType: 'multi_select', options: [{ id: '1', label: '春' }, { id: '2', label: '夏' }, { id: '3', label: '秋' }, { id: '4', label: '冬' }], order: 3, visible: true, isSystem: true },
-    { id: 'sys_location', name: '存放位置', fieldType: 'select', options: [{ id: '1', label: '家' }, { id: '2', label: '学校' }], order: 4, visible: true, isSystem: true },
-    { id: 'sys_location_detail', name: '具体位置', fieldType: 'text', options: [], order: 5, visible: true, isSystem: true },
-    { id: 'sys_brand', name: '品牌', fieldType: 'text', options: [], order: 6, visible: true, isSystem: true },
-    { id: 'sys_price', name: '价格', fieldType: 'number', options: [], order: 7, visible: true, isSystem: true },
-    { id: 'sys_purchase_date', name: '购买日期', fieldType: 'date', options: [], order: 8, visible: true, isSystem: true },
-    { id: 'sys_notes', name: '备注', fieldType: 'text', options: [], order: 9, visible: true, isSystem: true },
-    // 自定义字段
-    { id: '1', name: '颜色', fieldType: 'select', options: [{ id: '1', label: '红' }, { id: '2', label: '蓝' }, { id: '3', label: '白' }, { id: '4', label: '黑' }], order: 10, visible: true, isSystem: false },
-    { id: '2', name: '材质', fieldType: 'select', options: [{ id: '1', label: '棉' }, { id: '2', label: '麻' }, { id: '3', label: '涤纶' }, { id: '4', label: '羊毛' }], order: 11, visible: true, isSystem: false },
-    { id: '3', name: '尺码', fieldType: 'select', options: [{ id: '1', label: 'XS' }, { id: '2', label: 'S' }, { id: '3', label: 'M' }, { id: '4', label: 'L' }, { id: '5', label: 'XL' }, { id: '6', label: 'XXL' }], order: 12, visible: true, isSystem: false },
-  ],
+  attributeTemplates: DEFAULT_TEMPLATES,
   isLoaded: false,
 
   // 主页模式默认值
@@ -292,26 +336,10 @@ export const useStore = create<AppState>((set, get) => ({
   homeFilterSeason: null,
 
   // 身材数据
-  bodyData: {
-    height: null,
-    weight: null,
-    headCircumference: null,
-    neckCircumference: null,
-    shoulderWidth: null,
-    chestCircumference: null,
-    underBust: null,
-    waistCircumference: null,
-    abdomenCircumference: null,
-    hipCircumference: null,
-    upperArmCircumference: null,
-    forearmCircumference: null,
-    sleeveLength: null,
-    wristCircumference: null,
-    palmCircumference: null,
-    thighCircumference: null,
-    calfCircumference: null,
-    ankleCircumference: null,
-  },
+  bodyData: DEFAULT_BODY_DATA,
+
+  // 设置
+  settings: DEFAULT_SETTINGS,
 
   // 保存到本地存储
   saveData: async () => {
@@ -328,6 +356,7 @@ export const useStore = create<AppState>((set, get) => ({
       homeSortOrder: state.homeSortOrder,
       homeFilterCategory: state.homeFilterCategory,
       homeFilterSeason: state.homeFilterSeason,
+      settings: state.settings,
       bodyData: state.bodyData,
     };
     try {
@@ -343,7 +372,6 @@ export const useStore = create<AppState>((set, get) => ({
       const stored = await AsyncStorage.getItem(STORAGE_KEY);
       if (stored) {
         const data = JSON.parse(stored);
-        // 数据迁移：旧格式 → 新格式
         const migratedTemplates = migrateAttributeTemplates(data.attributeTemplates);
         set({
           categories: data.categories || DEFAULT_CATEGORIES.map(c => ({ ...c, createdAt: new Date() })),
@@ -357,14 +385,8 @@ export const useStore = create<AppState>((set, get) => ({
           homeSortOrder: data.homeSortOrder || 'desc',
           homeFilterCategory: data.homeFilterCategory || null,
           homeFilterSeason: data.homeFilterSeason || null,
-          bodyData: data.bodyData || {
-            height: null, weight: null, headCircumference: null, neckCircumference: null,
-            shoulderWidth: null, chestCircumference: null, underBust: null,
-            waistCircumference: null, abdomenCircumference: null, hipCircumference: null,
-            upperArmCircumference: null, forearmCircumference: null, sleeveLength: null,
-            wristCircumference: null, palmCircumference: null, thighCircumference: null,
-            calfCircumference: null, ankleCircumference: null,
-          },
+          settings: data.settings || DEFAULT_SETTINGS,
+          bodyData: data.bodyData || DEFAULT_BODY_DATA,
           isLoaded: true,
         });
       } else {
@@ -379,7 +401,6 @@ export const useStore = create<AppState>((set, get) => ({
           clothingItems: sampleItems,
           isLoaded: true,
         });
-        // 保存演示数据
         const initialData = {
           categories: DEFAULT_CATEGORIES.map(c => ({ ...c, createdAt: new Date() })),
           clothingItems: sampleItems,
@@ -391,14 +412,8 @@ export const useStore = create<AppState>((set, get) => ({
           homeSortOrder: 'desc',
           homeFilterCategory: null,
           homeFilterSeason: null,
-          bodyData: {
-            height: null, weight: null, headCircumference: null, neckCircumference: null,
-            shoulderWidth: null, chestCircumference: null, underBust: null,
-            waistCircumference: null, abdomenCircumference: null, hipCircumference: null,
-            upperArmCircumference: null, forearmCircumference: null, sleeveLength: null,
-            wristCircumference: null, palmCircumference: null, thighCircumference: null,
-            calfCircumference: null, ankleCircumference: null,
-          },
+          settings: DEFAULT_SETTINGS,
+          bodyData: DEFAULT_BODY_DATA,
         };
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(initialData));
       }
@@ -406,6 +421,13 @@ export const useStore = create<AppState>((set, get) => ({
       console.error('Failed to load data:', e);
       set({ isLoaded: true });
     }
+  },
+
+  // 设置更新
+  updateSetting: (key, value) => {
+    const { saveData } = get();
+    set(state => ({ settings: { ...state.settings, [key]: value } }));
+    saveData();
   },
 
   // 品类操作
@@ -464,11 +486,51 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   deleteClothingItem: (id) => {
+    // 软删除
+    const { saveData } = get();
+    set({
+      clothingItems: get().clothingItems.map(c =>
+        c.id === id ? { ...c, isDeleted: true, updatedAt: new Date() } : c
+      ),
+    });
+    saveData();
+  },
+
+  restoreClothingItem: (id) => {
+    const { saveData } = get();
+    set({
+      clothingItems: get().clothingItems.map(c =>
+        c.id === id ? { ...c, isDeleted: false, updatedAt: new Date() } : c
+      ),
+    });
+    saveData();
+  },
+
+  permanentDeleteClothingItem: (id) => {
     const { saveData } = get();
     set({
       clothingItems: get().clothingItems.filter(c => c.id !== id),
     });
     saveData();
+  },
+
+  clearAllData: async () => {
+    await AsyncStorage.removeItem(STORAGE_KEY);
+    set({
+      categories: DEFAULT_CATEGORIES.map(c => ({ ...c, createdAt: new Date() })),
+      clothingItems: [],
+      outfits: [],
+      occasions: DEFAULT_OCCASIONS.map(o => ({ ...o })),
+      calendarRecords: [],
+      attributeTemplates: DEFAULT_TEMPLATES,
+      homeMode: 'default',
+      homeSortBy: 'createdAt',
+      homeSortOrder: 'desc',
+      homeFilterCategory: null,
+      homeFilterSeason: null,
+      settings: DEFAULT_SETTINGS,
+      bodyData: DEFAULT_BODY_DATA,
+    });
   },
 
   // 搭配操作
@@ -557,7 +619,7 @@ export const useStore = create<AppState>((set, get) => ({
 
   deleteAttributeTemplate: (id) => {
     const tpl = get().attributeTemplates.find(t => t.id === id);
-    if (tpl?.isSystem) return; // 不能删除系统字段
+    if (tpl?.isSystem) return;
     const { saveData } = get();
     set({
       attributeTemplates: get().attributeTemplates.filter(t => t.id !== id),

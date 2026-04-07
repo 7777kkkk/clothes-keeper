@@ -23,6 +23,7 @@ export interface ClothingItem {
   notes: string;
   wearCount: number; // 穿搭次数
   customAttributes: CustomAttribute[]; // 自定义属性
+  isDeleted?: boolean; // 软删除标记
   createdAt: Date;
   updatedAt: Date;
 }
@@ -107,6 +108,7 @@ export type RootStackParamList = {
   LiquidGlassDemo: undefined;
   AttributeManage: undefined;
   BodyData: undefined;
+  RecycleBin: undefined;
 };
 
 // 身材数据

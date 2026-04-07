@@ -8,6 +8,26 @@
 
 ### ✨ 新功能（本次）
 
+- **通用设置功能完善（SettingsScreen）**
+  - 外观模式：Alert 选择器（浅色/深色/跟随系统），已废弃 Alert 占位提示
+  - 衣橱季节：Alert 选择器（春季/夏季/秋季/冬季/全年）
+  - 货币单位：Alert 选择器（CNY/USD/EUR/JPY/GBP/KRW），显示货币符号
+  - 新增 `settings` state（theme/season/currency），持久化到 AsyncStorage
+  - 新增 `ThemeMode` / `SeasonSetting` / `CurrencyUnit` 类型导出
+
+- **回收站（RecycleBinScreen）**
+  - 新增 `src/screens/RecycleBinScreen.tsx`，显示所有已软删除的衣物
+  - `ClothingItem` 新增 `isDeleted?: boolean` 软删除标记
+  - `deleteClothingItem` 改为软删除（设置 `isDeleted: true`）
+  - 支持单项恢复（restoreClothingItem）和彻底删除（permanentDeleteClothingItem）
+  - 支持批量恢复全部 / 清空回收站
+  - 入口：SettingsScreen → 数据 → 回收站
+
+- **清除所有数据（SettingsScreen）**
+  - 三重确认 Alert（警告 → 再次确认 → 输入"确认"）
+  - 调用 `clearAllData()` 清空 AsyncStorage 并重置 store 为初始状态
+  - 入口：SettingsScreen → 数据 → 清除所有数据
+
 - **身材数据页面（BodyDataScreen）**
   - 新增 `src/screens/BodyDataScreen.tsx`，支持录入和管理 18 项身材数据（身高/体重/头围/颈围/肩宽/胸围/下胸围/腰围/腹围/臀围/上臂围/前臂围/袖长/手腕围/掌围/大腿围/小腿围/踝围）
   - 字段分组显示：基础 / 躯干 / 四肢

@@ -1,11 +1,7 @@
-/**
- * SettingsScreen — 个人中心 / 设置页
- * 深色玻璃拟态，白色文字
- */
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert,
-  Modal, TextInput, KeyboardAvoidingView, Platform, Share,
+  Modal, TextInput, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons as Icon } from '@expo/vector-icons';
@@ -102,8 +98,77 @@ const SettingsScreen = () => {
   const nav = useNavigation<any>();
   const { categories, clothingItems, outfits, occasions, calendarRecords,
     attributeTemplates, homeMode, homeSortBy, homeSortOrder,
-    homeFilterCategory, homeFilterSeason, bodyData, loadData } = useStore();
+    homeFilterCategory, homeFilterSeason, bodyData, settings, updateSetting,
+    loadData, clearAllData } = useStore();
   const [restoreVisible, setRestoreVisible] = useState(false);
+
+  // 主题显示文字
+  const themeLabels = { light: '浅色', dark: '深色', system: '跟随系统' };
+  const seasonLabels: Record<string, string> = {
+    '春': '春季', '夏': '夏季', '秋': '秋季', '冬': '冬季', '全年': '全年',
+  };
+  const currencySymbols: Record<string, string> = {
+    CNY: 'CNY (¥)', USD: 'USD ($)', EUR: 'EUR (€)', JPY: 'JPY (¥)', GBP: 'GBP (£)', KRW: 'KRW (₩)',
+  };
+
+  // 外观模式选择
+  const handleThemePress = () => {
+    Alert.alert('外观模式', '选择主题', [
+      { text: '浅色', onPress: () => updateSetting('theme', 'light') },
+      { text: '深色', onPress: () => updateSetting('theme', 'dark') },
+      { text: '跟随系统', onPress: () => updateSetting('theme', 'system') },
+    ]);
+  };
+
+  // 衣橱季节选择
+  const handleSeasonPress = () => {
+    Alert.alert('衣橱季节', '选择当前季节', [
+      { text: '春季', onPress: () => updateSetting('season', '春') },
+      { text: '夏季', onPress: () => updateSetting('season', '夏') },
+      { text: '秋季', onPress: () => updateSetting('season', '秋') },
+      { text: '冬季', onPress: () => updateSetting('season', '冬') },
+      { text: '全年', onPress: () => updateSetting('season', '全年') },
+    ]);
+  };
+
+  // 货币单位选择
+  const handleCurrencyPress = () => {
+    const options: Array<{ text: string; value: 'CNY' | 'USD' | 'EUR' | 'JPY' | 'GBP' | 'KRW' }> = [
+      { text: 'CNY (¥) 人民币', value: 'CNY' },
+      { text: 'USD ($) 美元', value: 'USD' },
+      { text: 'EUR (€) 欧元', value: 'EUR' },
+      { text: 'JPY (¥) 日元', value: 'JPY' },
+      { text: 'GBP (£) 英镑', value: 'GBP' },
+      { text: 'KRW (₩) 韩元', value: 'KRW' },
+    ];
+    Alert.alert('货币单位', '选择货币单位', [
+      ...options.map(o => ({ text: o.text, onPress: () => updateSetting('currency', o.value) })),
+    ]);
+  };
+
+  // 清除所有数据
+  const handleClearAllData = () => {
+    Alert.alert('⚠️ 警告', '确定要清除所有数据吗？此操作不可恢复！', [
+      { text: '取消' },
+      {
+        text: '确定',
+        style: 'destructive',
+        onPress: () => {
+          Alert.alert('再次确认', '请输入「确认」以执行清除操作', [
+            { text: '取消' },
+            {
+              text: '确认',
+              style: 'destructive',
+              onPress: async () => {
+                await clearAllData();
+                Alert.alert('已清除', '所有数据已清除，App 将重新加载。');
+              },
+            },
+          ]);
+        },
+      },
+    ]);
+  };
 
   // 数据备份
   const handleBackup = async () => {
@@ -180,17 +245,18 @@ const SettingsScreen = () => {
 
           <SectionHeader title="通用设置" />
           <GlassCard style={styles.settingsGroup} padding="none">
-            <SettingRow icon="sunny-outline" title="外观模式" value="浅色" onPress={() => Alert.alert('提示', '功能开发中')} />
-            <SettingRow icon="leaf-outline" title="衣橱季节" value="全年" onPress={() => Alert.alert('提示', '功能开发中')} />
+            <SettingRow icon="sunny-outline" title="外观模式" value={themeLabels[settings.theme]} onPress={handleThemePress} />
+            <SettingRow icon="leaf-outline" title="衣橱季节" value={seasonLabels[settings.season]} onPress={handleSeasonPress} />
             <SettingRow icon="body-outline" title="身材数据" onPress={() => nav.navigate('BodyData')} />
-            <SettingRow icon="cash-outline" title="货币单位" value="CNY" onPress={() => Alert.alert('提示', '功能开发中')} />
+            <SettingRow icon="cash-outline" title="货币单位" value={currencySymbols[settings.currency]} onPress={handleCurrencyPress} />
           </GlassCard>
 
           <SectionHeader title="数据" />
           <GlassCard style={styles.settingsGroup} padding="none">
             <SettingRow icon="cloud-upload" title="数据备份" subtitle="复制到剪贴板" onPress={handleBackup} />
             <SettingRow icon="cloud-download" title="恢复数据" subtitle="从备份恢复" onPress={() => setRestoreVisible(true)} />
-            <SettingRow icon="trash-bin-outline" title="回收站" subtitle="已删除衣物" danger onPress={() => Alert.alert('提示', '功能开发中')} />
+            <SettingRow icon="trash-bin-outline" title="回收站" subtitle="已删除衣物" danger onPress={() => nav.navigate('RecycleBin')} />
+            <SettingRow icon="nuclear-outline" title="清除所有数据" subtitle="不可恢复" danger onPress={handleClearAllData} />
           </GlassCard>
 
           <SectionHeader title="其他" />
