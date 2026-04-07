@@ -116,3 +116,17 @@
 - 项目初始化（Expo SDK 54 + TypeScript）
 - 配置 `@expo/vector-icons`、`expo-linear-gradient`、`expo-blur`
 - 构建首页、详情页、添加衣服页面等基础功能
+
+### 🐛 Bug 修复
+
+- **AddClothingScreen 编辑模式修复**
+  - 问题：`itemId` 参数接收但未使用，标题始终显示"添加衣物"，表单初始值始终为空，`handleSave` 始终调用 `addClothingItem`
+  - 修复：新增 `useEffect` 预填表单数据；动态设置导航标题；`handleSave` 区分新建/编辑模式分别调用 `addClothingItem` / `updateClothingItem`
+
+- **visible 过滤逻辑统一**
+  - 问题：`AddClothingScreen` 使用 `.filter(t => t.visible && !t.isSystem)`，`ClothingDetailScreen` 使用 `.filter(t => t.visible !== false)`
+  - 修复：统一为 `.filter(t => t.visible !== false)`，与 ClothingDetailScreen 保持一致
+
+- **images 字段类型渲染支持**
+  - 问题：`AttributeFieldType` 包含 `'images'` 类型，但 `renderCustomField` 中无对应渲染分支
+  - 修复：新增 `images` 类型渲染分支（图片选择/预览/删除）；`handleSave` 中对 `images` 类型字段将 `string[]` 序列化为 JSON 存储

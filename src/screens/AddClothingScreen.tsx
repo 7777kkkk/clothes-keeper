@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useRoute } from '@react-navigation/native';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   TextInput, Image, Alert, Modal,
@@ -16,15 +17,68 @@ import { Season, LocationType, AttributeTemplate, CustomAttribute } from '../typ
 const SEASONS: Season[] = ['春', '夏', '秋', '冬'];
 const LOCATION_TYPES: LocationType[] = ['家', '学校'];
 
-const AddClothingScreen = () => {
+const AddClothingScreen = ({ route }: any) => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
-  const { addClothingItem, categories, attributeTemplates = [] } = useStore();
+  const { addClothingItem, updateClothingItem, clothingItems, categories, attributeTemplates = [] } = useStore();
+
+  const { itemId } = route.params as { itemId?: string };
+  const isEditMode = !!itemId;
+
+  // 动态设置导航标题
+  useEffect(() => {
+    navigation.setOptions({ title: isEditMode ? '编辑衣物' : '添加衣物' });
+  }, [isEditMode]);
+
+  // 编辑模式下预填数据
+  useEffect(() => {
+    if (itemId) {
+      const item = clothingItems.find(c => c.id === itemId);
+      if (item) {
+        setImages(item.images);
+        setName(item.name);
+        setCategoryId(item.categoryId);
+        setSelectedSeasons(item.seasons || []);
+        setLocationType(item.locationType || '家');
+        setLocationDetail(item.locationDetail || '');
+        setBrand(item.brand || '');
+        setPrice(item.price ? String(item.price) : '');
+        setPurchaseDate(item.purchaseDate ? new Date(item.purchaseDate) : null);
+        setPurchaseDateMode(item.purchaseDateMode || 'full');
+        setNotes(item.notes || '');
+
+        // 预填自定义属性
+        (item.customAttributes || []).forEach(attr => {
+          const tpl = attributeTemplates.find(t => t.id === attr.templateId);
+          if (!tpl) return;
+          if (tpl.fieldType === 'multi_select') {
+            setCustomMultiValues(prev => ({
+              ...prev,
+              [tpl.id]: attr.value ? attr.value.split('、') : [],
+            }));
+          } else if (tpl.fieldType === 'checkbox') {
+            setCustomCheckboxValues(prev => ({ ...prev, [tpl.id]: attr.value === '是' }));
+          } else if (tpl.fieldType === 'images') {
+            try {
+              setCustomImagesValues(prev => ({
+                ...prev,
+                [tpl.id]: JSON.parse(attr.value),
+              }));
+            } catch {
+              setCustomImagesValues(prev => ({ ...prev, [tpl.id]: [] }));
+            }
+          } else {
+            setCustomValues(prev => ({ ...prev, [tpl.id]: attr.value }));
+          }
+        });
+      }
+    }
+  }, [itemId]);
 
   // 筛选出 visible=true 且非系统内置的字段，按 order 排序
   const visibleCustomFields = useMemo(() => {
     return attributeTemplates
-      .filter(t => t.visible && !t.isSystem)
+      .filter(t => t.visible !== false)
       .sort((a, b) => a.order - b.order);
   }, [attributeTemplates]);
 
@@ -49,6 +103,8 @@ const AddClothingScreen = () => {
   const [customMultiValues, setCustomMultiValues] = useState<Record<string, string[]>>({});
   // 开关字段值，key = templateId
   const [customCheckboxValues, setCustomCheckboxValues] = useState<Record<string, boolean>>({});
+  // images 类型字段值，key = templateId
+  const [customImagesValues, setCustomImagesValues] = useState<Record<string, string[]>>({});
 
   const pickImages = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -106,6 +162,26 @@ const AddClothingScreen = () => {
 
   const setCustomCheckboxValue = (templateId: string, value: boolean) => {
     setCustomCheckboxValues(prev => ({ ...prev, [templateId]: value }));
+  };
+
+  const setCustomImagesValue = (templateId: string, urls: string[]) => {
+    setCustomImagesValues(prev => ({ ...prev, [templateId]: urls }));
+  };
+
+  const pickCustomFieldImages = async (tplId: string) => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
+      quality: 0.8,
+    });
+    if (!result.canceled) {
+      const uris = result.assets.map(a => a.uri);
+      setCustomImagesValue(tplId, [...(customImagesValues[tplId] || []), ...uris]);
+    }
+  };
+
+  const removeCustomFieldImage = (tplId: string, idx: number) => {
+    setCustomImagesValue(tplId, (customImagesValues[tplId] || []).filter((_, i) => i !== idx));
   };
 
   // 动态渲染单个自定义字段
@@ -202,6 +278,28 @@ const AddClothingScreen = () => {
       );
     }
 
+    if (fieldType === 'images') {
+      const fieldImages = customImagesValues[tplId] || [];
+      return (
+        <View key={tplId} style={styles.section}>
+          <Text style={styles.sectionTitle}>{tplName}</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.imagesRow}>
+            {fieldImages.map((uri, idx) => (
+              <View key={idx} style={styles.imageWrap}>
+                <Image source={{ uri }} style={styles.imagePreview} />
+                <TouchableOpacity style={styles.removeImgBtn} onPress={() => removeCustomFieldImage(tplId, idx)}>
+                  <Icon name="close-circle" size={20} color={COLORS.error} />
+                </TouchableOpacity>
+              </View>
+            ))}
+            <TouchableOpacity style={styles.addImageBtn} onPress={() => pickCustomFieldImages(tplId)}>
+              <Icon name="add" size={28} color={COLORS.textSecondary} />
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+      );
+    }
+
     // 默认 text
     return (
       <View key={tplId} style={styles.section}>
@@ -248,6 +346,17 @@ const AddClothingScreen = () => {
           type: 'text',
           templateId: tplId,
         });
+      } else if (fieldType === 'images') {
+        const imgs = customImagesValues[tplId] || [];
+        if (imgs.length > 0) {
+          customAttributes.push({
+            id: Math.random().toString(36).substring(2, 9),
+            name: tplName,
+            value: JSON.stringify(imgs),
+            type: 'text',
+            templateId: tplId,
+          });
+        }
       } else {
         const val = customValues[tplId];
         if (val && val.trim()) {
@@ -262,7 +371,7 @@ const AddClothingScreen = () => {
       }
     });
 
-    addClothingItem({
+    const baseData = {
       name: name.trim(),
       images,
       categoryId,
@@ -274,13 +383,20 @@ const AddClothingScreen = () => {
       purchaseDate,
       purchaseDateMode,
       notes: notes.trim(),
-      wearCount: 0,
       customAttributes,
-    });
+    };
 
-    Alert.alert('添加成功', '衣物已添加到衣橱', [
-      { text: '确定', onPress: () => navigation.goBack() },
-    ]);
+    if (isEditMode && itemId) {
+      updateClothingItem(itemId, baseData);
+      Alert.alert('保存成功', '衣物信息已更新', [
+        { text: '确定', onPress: () => navigation.goBack() },
+      ]);
+    } else {
+      addClothingItem({ ...baseData, wearCount: 0 });
+      Alert.alert('添加成功', '衣物已添加到衣橱', [
+        { text: '确定', onPress: () => navigation.goBack() },
+      ]);
+    }
   };
 
   const currentYear = new Date().getFullYear();
@@ -296,7 +412,7 @@ const AddClothingScreen = () => {
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Icon name="chevron-back" size={22} color={COLORS.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.navTitle}>添加衣物</Text>
+          <Text style={styles.navTitle}>{isEditMode ? '编辑衣物' : '添加衣物'}</Text>
           <View style={{ width: 34 }} />
         </View>
 
